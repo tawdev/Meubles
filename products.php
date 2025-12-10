@@ -136,9 +136,9 @@ $allProducts = $stmt->fetchAll();
                                         data-name="<?php echo htmlspecialchars($product['name']); ?>"
                                         data-price="<?php echo $product['price']; ?>"
                                         data-image="<?php echo htmlspecialchars($product['image']); ?>"
-                                        style="width: 50px; height: 50px; border-radius: 8px; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
+                                        style="flex: 1; text-align: center; padding: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.9rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
                                         title="Ajouter au panier">
-                                    🛒
+                                    🛒 Ajouter
                                 </button>
                             </div>
                         </div>
