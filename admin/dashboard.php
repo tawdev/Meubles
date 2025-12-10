@@ -62,7 +62,7 @@ try {
         </div>
         <div class="category-card">
             <h3 style="color: var(--primary-color);">Chiffre d'affaires</h3>
-            <p style="font-size: 2rem; font-weight: bold; color: var(--success-color);"><?php echo number_format($stats['total_revenue'] ?? 0, 2, ',', ' '); ?> €</p>
+            <p style="font-size: 2rem; font-weight: bold; color: var(--success-color);"><?php echo number_format($stats['total_revenue'] ?? 0, 2, ',', ' '); ?> DH</p>
         </div>
     </div>
 
@@ -93,7 +93,7 @@ try {
                     </td>
                     <td><?php echo htmlspecialchars($product['name']); ?></td>
                     <td><?php echo htmlspecialchars($product['category']); ?></td>
-                    <td><?php echo number_format($product['price'], 2, ',', ' '); ?> €</td>
+                    <td><?php echo number_format($product['price'], 2, ',', ' '); ?> DH</td>
                     <td><?php echo isset($product['stock']) ? $product['stock'] : 'N/A'; ?></td>
                     <td>
                         <div class="admin-actions">

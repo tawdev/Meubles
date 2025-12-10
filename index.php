@@ -97,7 +97,7 @@ $featuredProducts = $stmt->fetchAll();
             <div class="category-card">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">🚚</div>
                 <h3>Livraison Rapide</h3>
-                <p>Livraison gratuite à partir de 100€ d'achat</p>
+                <p>Livraison gratuite à partir de 1000 DH d'achat</p>
             </div>
             <div class="category-card">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">💳</div>

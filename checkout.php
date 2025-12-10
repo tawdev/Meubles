@@ -627,7 +627,7 @@ function renderCheckoutItems() {
                     <p>Quantité: ${item.quantity}</p>
                 </div>
                 <div class="checkout-item-price">
-                    ${(item.price * item.quantity).toFixed(2)} €
+                    ${(item.price * item.quantity).toFixed(2)} DH
                 </div>
             </div>
         `;
@@ -637,22 +637,22 @@ function renderCheckoutItems() {
     
     // Calculer le résumé
     const subtotal = cartManager.getTotal();
-    const shipping = subtotal > 100 ? 0 : 15;
+    const shipping = subtotal > 1000 ? 0 : 150;
     const total = subtotal + shipping;
     
     checkoutSummary.innerHTML = `
         <div class="checkout-summary-details">
             <div class="summary-row">
                 <span>Sous-total</span>
-                <span>${subtotal.toFixed(2)} €</span>
+                <span>${subtotal.toFixed(2)} DH</span>
             </div>
             <div class="summary-row">
                 <span>Livraison</span>
-                <span>${shipping > 0 ? shipping.toFixed(2) + ' €' : 'Gratuite'}</span>
+                <span>${shipping > 0 ? shipping.toFixed(2) + ' DH' : 'Gratuite'}</span>
             </div>
             <div class="summary-row total">
                 <span>Total</span>
-                <span>${total.toFixed(2)} €</span>
+                <span>${total.toFixed(2)} DH</span>
             </div>
         </div>
     `;
@@ -786,7 +786,7 @@ function showSuccessModal(orderId, total) {
                 </div>
                 <div class="order-info">
                     <strong>Montant total :</strong>
-                    <span class="order-total">${total.toFixed(2)} €</span>
+                    <span class="order-total">${total.toFixed(2)} DH</span>
                 </div>
             </div>
             <p class="success-note">Vous recevrez un email de confirmation sous peu.</p>

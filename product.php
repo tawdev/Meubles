@@ -48,7 +48,7 @@ $relatedProducts = $stmt->fetchAll();
         
         <div class="product-details">
             <h1><?php echo htmlspecialchars($product['name']); ?></h1>
-            <div class="price"><?php echo number_format($product['price'], 2, ',', ' '); ?> €</div>
+            <div class="price"><?php echo number_format($product['price'], 2, ',', ' '); ?> DH</div>
             
             <div class="stock-info <?php echo $product['stock'] > 0 ? 'in-stock' : 'out-of-stock'; ?>">
                 <?php if ($product['stock'] > 0): ?>
@@ -95,7 +95,7 @@ $relatedProducts = $stmt->fetchAll();
                     <div class="product-info">
                         <h3 class="product-name"><?php echo htmlspecialchars($related['name']); ?></h3>
                         <p class="product-description"><?php echo htmlspecialchars(substr($related['description'], 0, 100)) . '...'; ?></p>
-                        <div class="product-price"><?php echo number_format($related['price'], 2, ',', ' '); ?> €</div>
+                        <div class="product-price"><?php echo number_format($related['price'], 2, ',', ' '); ?> DH</div>
                         <div class="product-actions">
                             <a href="product.php?id=<?php echo $related['id']; ?>" class="btn" style="flex: 1; text-align: center;">Voir détails</a>
                             <button class="btn-add-cart" 

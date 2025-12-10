@@ -62,10 +62,10 @@ $allProducts = $stmt->fetchAll();
                     <select id="filter-price" onchange="filterProducts()" 
                             style="flex: 1; padding: 0.875rem 1rem; border: none; border-radius: 8px; font-size: 0.95rem; background: white; color: var(--text-dark); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.08); transition: all 0.3s ease; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'><path fill=\'%23333\' d=\'M6 9L1 4h10z\'/></svg>'); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem;">
                         <option value="all">Tous les prix</option>
-                        <option value="0-200">Moins de 200€</option>
-                        <option value="200-500">200€ - 500€</option>
-                        <option value="500-1000">500€ - 1000€</option>
-                        <option value="1000-max">Plus de 1000€</option>
+                        <option value="0-200">Moins de 2000 DH</option>
+                        <option value="200-500">2000 DH - 5000 DH</option>
+                        <option value="500-1000">5000 DH - 10000 DH</option>
+                        <option value="1000-max">Plus de 10000 DH</option>
                     </select>
                 </div>
                 
@@ -123,7 +123,7 @@ $allProducts = $stmt->fetchAll();
                                 <?php echo htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?>
                             </p>
                             <div class="product-price" style="font-size: 1.8rem; font-weight: bold; color: var(--accent-color); margin-bottom: 1.5rem; padding: 0.75rem 0; border-top: 2px solid var(--bg-light); border-bottom: 2px solid var(--bg-light);">
-                                <?php echo number_format($product['price'], 2, ',', ' '); ?> €
+                                <?php echo number_format($product['price'], 2, ',', ' '); ?> DH
                             </div>
                             <div class="product-actions" style="display: flex; gap: 0.75rem;">
                                 <a href="product.php?id=<?php echo $product['id']; ?>" 

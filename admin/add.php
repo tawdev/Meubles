@@ -110,7 +110,7 @@ $products = $stmt->fetchAll();
                 </div>
                 
                 <div class="form-group">
-                    <label for="price">Prix (€) *</label>
+                    <label for="price">Prix (DH) *</label>
                     <input type="number" id="price" name="price" step="0.01" min="0" required
                            value="<?php echo isset($_POST['price']) ? htmlspecialchars($_POST['price']) : ''; ?>">
                 </div>
@@ -181,7 +181,7 @@ $products = $stmt->fetchAll();
                         </td>
                         <td><?php echo htmlspecialchars($product['name']); ?></td>
                         <td><?php echo htmlspecialchars($product['category']); ?></td>
-                        <td><?php echo number_format($product['price'], 2, ',', ' '); ?> €</td>
+                        <td><?php echo number_format($product['price'], 2, ',', ' '); ?> DH</td>
                         <td><?php echo isset($product['stock']) ? $product['stock'] : 'N/A'; ?></td>
                         <td>
                             <div class="admin-actions">

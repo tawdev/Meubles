@@ -83,7 +83,7 @@ require_once 'includes/header.php';
                 <div style="font-size: 3.5rem; margin-bottom: 1rem;">🚚</div>
                 <h3 style="color: var(--primary-color); margin-bottom: 1rem;">Livraison Rapide</h3>
                 <p style="color: var(--text-light); line-height: 1.7;">
-                    Expédition sous 48h pour la plupart des produits. Livraison gratuite à partir de 100€.
+                    Expédition sous 48h pour la plupart des produits. Livraison gratuite à partir de 1000 DH.
                 </p>
             </div>
             <div class="category-card" style="text-align: center; padding: 2rem;">

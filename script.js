@@ -110,7 +110,7 @@ class CartManager {
                     <img src="${item.image}" alt="${item.name}" class="cart-item-image">
                     <div class="cart-item-info">
                         <h3>${item.name}</h3>
-                        <div class="cart-item-price">${item.price.toFixed(2)} €</div>
+                        <div class="cart-item-price">${item.price.toFixed(2)} DH</div>
                     </div>
                     <div class="cart-item-quantity">
                         <button class="quantity-btn" onclick="cartManager.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
@@ -118,7 +118,7 @@ class CartManager {
                                onchange="cartManager.updateQuantity(${item.id}, parseInt(this.value))">
                         <button class="quantity-btn" onclick="cartManager.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
                     </div>
-                    <div class="cart-item-total">${(item.price * item.quantity).toFixed(2)} €</div>
+                    <div class="cart-item-total">${(item.price * item.quantity).toFixed(2)} DH</div>
                     <button class="remove-item" onclick="cartManager.removeFromCart(${item.id})">Supprimer</button>
                 </div>
             `;
@@ -129,22 +129,22 @@ class CartManager {
 
         if (cartSummary) {
             const subtotal = this.getTotal();
-            const shipping = subtotal > 100 ? 0 : 15;
+            const shipping = subtotal > 1000 ? 0 : 150;
             const total = subtotal + shipping;
 
             cartSummary.innerHTML = `
                 <h2>Résumé de la commande</h2>
                 <div class="summary-row">
                     <span>Sous-total</span>
-                    <span>${subtotal.toFixed(2)} €</span>
+                    <span>${subtotal.toFixed(2)} DH</span>
                 </div>
                 <div class="summary-row">
                     <span>Livraison</span>
-                    <span>${shipping > 0 ? shipping.toFixed(2) + ' €' : 'Gratuite'}</span>
+                    <span>${shipping > 0 ? shipping.toFixed(2) + ' DH' : 'Gratuite'}</span>
                 </div>
                 <div class="summary-row total">
                     <span>Total</span>
-                    <span>${total.toFixed(2)} €</span>
+                    <span>${total.toFixed(2)} DH</span>
                 </div>
                 <button class="btn" onclick="checkout()" style="width: 100%; margin-top: 1rem;">Passer la commande</button>
             `;

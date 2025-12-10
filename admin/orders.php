@@ -65,7 +65,7 @@ $orders = $stmt->fetchAll();
                         <td><?php echo htmlspecialchars($order['customer_name']); ?></td>
                         <td><?php echo htmlspecialchars($order['customer_email']); ?></td>
                         <td><?php echo htmlspecialchars($order['customer_address']); ?></td>
-                        <td><?php echo number_format($order['total_amount'], 2, ',', ' '); ?> €</td>
+                        <td><?php echo number_format($order['total_amount'], 2, ',', ' '); ?> DH</td>
                         <td>
                             <form method="POST" action="orders.php" style="display: inline;">
                                 <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
@@ -100,8 +100,8 @@ $orders = $stmt->fetchAll();
                                             <tr>
                                                 <td><?php echo htmlspecialchars($item['product_name']); ?></td>
                                                 <td><?php echo $item['quantity']; ?></td>
-                                                <td><?php echo number_format($item['price'], 2, ',', ' '); ?> €</td>
-                                                <td><?php echo number_format($item['price'] * $item['quantity'], 2, ',', ' '); ?> €</td>
+                                                <td><?php echo number_format($item['price'], 2, ',', ' '); ?> DH</td>
+                                                <td><?php echo number_format($item['price'] * $item['quantity'], 2, ',', ' '); ?> DH</td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>

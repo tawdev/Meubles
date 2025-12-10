@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             
             <div class="form-group">
-                <label for="price">Prix (€) *</label>
+                <label for="price">Prix (DH) *</label>
                 <input type="number" id="price" name="price" step="0.01" min="0" required value="<?php echo $product['price']; ?>">
             </div>
             
