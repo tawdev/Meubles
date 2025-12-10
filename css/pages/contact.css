@@ -1,0 +1,228 @@
+/* ===== PAGE CONTACT - STYLE UNIQUE ===== */
+/* Identité visuelle : Accueillant, accessible, professionnel */
+
+/* Hero spécifique */
+.hero {
+    min-height: 40vh;
+    background: linear-gradient(135deg, rgba(107, 78, 61, 0.3) 0%, rgba(184, 149, 106, 0.25) 100%),
+                url('../../images/gpt-image-1-mini_b_efacer_le_text_dans_.png') center/cover no-repeat;
+}
+
+/* Section coordonnées */
+.contact-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.contact-card {
+    background: linear-gradient(135deg, var(--bg-white), var(--bg-light));
+    padding: 2.5rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(107, 78, 61, 0.1);
+    border: 2px solid var(--border-light);
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.contact-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(184, 149, 106, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.contact-card:hover::before {
+    left: 100%;
+}
+
+.contact-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(184, 149, 106, 0.2);
+    border-color: var(--secondary-color);
+}
+
+.contact-card-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.contact-card:hover .contact-card-icon {
+    transform: scale(1.2) rotate(5deg);
+}
+
+.contact-card h3 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.contact-card p {
+    color: var(--text-medium);
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.contact-card a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.contact-card a:hover {
+    color: var(--primary-color);
+}
+
+/* Formulaire de contact */
+.form-container {
+    background: linear-gradient(135deg, var(--bg-white), var(--bg-light));
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(107, 78, 61, 0.15);
+    border: 2px solid var(--border-light);
+    padding: 3rem;
+    margin: 3rem auto;
+    max-width: 700px;
+}
+
+.form-container h2 {
+    color: var(--primary-color);
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.form-container h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+.form-group {
+    margin-bottom: 2rem;
+}
+
+.form-group label {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: var(--bg-white);
+    color: var(--text-dark);
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 4px rgba(184, 149, 106, 0.1);
+    background: var(--bg-light);
+    transform: translateY(-2px);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 150px;
+}
+
+/* Bouton soumettre */
+.submit-btn {
+    width: 100%;
+    padding: 1.2rem 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(107, 78, 61, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.submit-btn:hover {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(184, 149, 106, 0.4);
+}
+
+.submit-btn:active {
+    transform: translateY(-1px);
+}
+
+/* Messages de succès/erreur */
+.success-message,
+.error-message {
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-weight: 600;
+    animation: slideIn 0.5s ease;
+}
+
+.success-message {
+    background: linear-gradient(135deg, var(--wood-dark), var(--secondary-color));
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 111, 71, 0.3);
+}
+
+.error-message {
+    background: linear-gradient(135deg, #8B6F47, #6B4E3D);
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 111, 71, 0.3);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 2rem 1.5rem;
+    }
+    
+    .contact-info {
+        grid-template-columns: 1fr;
+    }
+}
+

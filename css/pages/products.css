@@ -1,0 +1,163 @@
+/* ===== PAGE PRODUITS - STYLE UNIQUE ===== */
+/* Identité visuelle : Moderne, dynamique, catalogue */
+
+/* Hero spécifique produits */
+.hero {
+    background: linear-gradient(135deg, rgba(107, 78, 61, 0.3) 0%, rgba(184, 149, 106, 0.2) 100%),
+                url('../../images/gpt-image-1-mini_b_efacer_le_text_dans_.png') center/cover no-repeat;
+    min-height: 50vh;
+}
+
+.hero-content {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(15px);
+}
+
+/* Filtres améliorés */
+.filters {
+    background: linear-gradient(135deg, var(--bg-white) 0%, var(--bg-light) 100%);
+    border: 2px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(107, 78, 61, 0.1);
+    position: sticky;
+    top: 80px;
+    z-index: 100;
+    margin-bottom: 2rem;
+}
+
+.filters:hover {
+    box-shadow: 0 6px 30px rgba(107, 78, 61, 0.15);
+    transition: box-shadow 0.3s ease;
+}
+
+/* Compteur de résultats */
+#results-count {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(107, 78, 61, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Grille produits améliorée */
+.products-grid {
+    gap: 2.5rem;
+}
+
+.product-card {
+    background: var(--bg-white);
+    border: 2px solid var(--border-light);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.product-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(184, 149, 106, 0.1), transparent);
+    transition: left 0.5s ease;
+    z-index: 1;
+}
+
+.product-card:hover::before {
+    left: 100%;
+}
+
+.product-card:hover {
+    border-color: var(--secondary-color);
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(184, 149, 106, 0.25);
+}
+
+.product-image {
+    transition: transform 0.5s ease;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.1);
+}
+
+/* Badge catégorie */
+.product-card > div:first-child {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    box-shadow: 0 4px 15px rgba(107, 78, 61, 0.4);
+}
+
+/* Prix */
+.product-price {
+    background: linear-gradient(135deg, var(--bg-light), var(--bg-medium));
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+    border-left: 4px solid var(--primary-color);
+}
+
+/* Boutons produits */
+.product-actions .btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.product-actions .btn:hover {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(184, 149, 106, 0.4);
+}
+
+.btn-add-cart {
+    background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+    transition: all 0.3s ease;
+}
+
+.btn-add-cart:hover {
+    background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Section titre */
+.section-title {
+    color: var(--primary-color);
+    font-size: 2.8rem;
+    position: relative;
+    display: inline-block;
+}
+
+.section-title::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filters {
+        position: relative;
+        top: 0;
+    }
+    
+    .products-grid {
+        gap: 1.5rem;
+    }
+}
+

@@ -1,0 +1,149 @@
+/* ===== PAGE D'ACCUEIL - STYLE UNIQUE ===== */
+/* Identité visuelle : Chaleureux, accueillant, moderne */
+
+/* Hero Section améliorée */
+.hero {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    background: linear-gradient(
+        135deg,
+        rgba(107, 78, 61, 0.2) 0%,
+        rgba(184, 149, 106, 0.15) 50%,
+        rgba(107, 78, 61, 0.25) 100%
+    );
+}
+
+/* Section Catégories - Style unique */
+#categories {
+    background: linear-gradient(180deg, var(--bg-light) 0%, var(--bg-medium) 100%);
+    position: relative;
+}
+
+#categories::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color));
+}
+
+.category-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+    background: var(--bg-white);
+}
+
+.category-card:hover {
+    border-color: var(--secondary-color);
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(184, 149, 106, 0.3);
+}
+
+.category-card div {
+    transition: transform 0.3s ease;
+}
+
+.category-card:hover div {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Section Produits - Style accueil */
+#products {
+    background: var(--bg-white);
+    padding: 4rem 0;
+}
+
+#products .section-title {
+    color: var(--primary-color);
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+#products .section-title::after {
+    width: 120px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+/* Section Pourquoi nous choisir */
+#why-us {
+    background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-medium) 100%);
+    padding: 4rem 0;
+    margin-top: 0;
+    position: relative;
+}
+
+#why-us::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--secondary-color), transparent);
+}
+
+#why-us .category-card {
+    background: var(--bg-white);
+    border-left: 4px solid var(--secondary-color);
+    transition: all 0.3s ease;
+}
+
+#why-us .category-card:hover {
+    border-left-color: var(--primary-color);
+    transform: translateX(10px);
+    box-shadow: 0 8px 25px rgba(107, 78, 61, 0.2);
+}
+
+/* Animations spécifiques à la page d'accueil */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.category-card:nth-child(1) {
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 0s;
+}
+
+.category-card:nth-child(2) {
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 0.5s;
+}
+
+.category-card:nth-child(3) {
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 1s;
+}
+
+.category-card:nth-child(4) {
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 1.5s;
+}
+
+.category-card:nth-child(5) {
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 2s;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #categories {
+        padding: 2rem 0;
+    }
+    
+    #why-us {
+        padding: 3rem 0;
+    }
+}
+

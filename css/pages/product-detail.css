@@ -1,0 +1,191 @@
+/* ===== PAGE DÉTAIL PRODUIT - STYLE UNIQUE ===== */
+/* Identité visuelle : Luxueux, détaillé, immersif */
+
+/* Hero spécifique */
+.hero {
+    min-height: 40vh;
+    background: linear-gradient(135deg, rgba(107, 78, 61, 0.4) 0%, rgba(184, 149, 106, 0.3) 100%),
+                url('../../images/gpt-image-1-mini_b_efacer_le_text_dans_.png') center/cover no-repeat;
+}
+
+/* Section détail produit */
+.product-detail {
+    background: var(--bg-white);
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(107, 78, 61, 0.15);
+    margin: 3rem auto;
+    max-width: 1400px;
+}
+
+/* Galerie images */
+.product-gallery {
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(107, 78, 61, 0.2);
+}
+
+.main-image {
+    border-radius: 15px;
+    border: 3px solid var(--border-light);
+    transition: transform 0.3s ease;
+}
+
+.main-image:hover {
+    transform: scale(1.02);
+}
+
+.thumbnail-images {
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.thumbnail {
+    border: 3px solid var(--border-color);
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.thumbnail:hover,
+.thumbnail.active {
+    border-color: var(--secondary-color);
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(184, 149, 106, 0.4);
+}
+
+/* Détails produit */
+.product-details {
+    padding: 2rem;
+}
+
+.product-details h1 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.product-details h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+.product-details .price {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 3rem;
+    font-weight: 800;
+    margin: 1.5rem 0;
+    display: inline-block;
+}
+
+.product-details .description {
+    color: var(--text-medium);
+    line-height: 1.8;
+    font-size: 1.1rem;
+    padding: 1.5rem;
+    background: var(--bg-light);
+    border-radius: 10px;
+    border-left: 4px solid var(--secondary-color);
+}
+
+/* Stock info */
+.stock-info {
+    background: linear-gradient(135deg, rgba(139, 111, 71, 0.1), rgba(184, 149, 106, 0.1));
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.stock-info.in-stock {
+    border-left: 5px solid var(--wood-dark);
+    background: linear-gradient(135deg, rgba(139, 111, 71, 0.15), rgba(184, 149, 106, 0.1));
+}
+
+/* Boutons d'action */
+.product-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.product-actions .btn {
+    flex: 1;
+    padding: 1.2rem 2rem;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(107, 78, 61, 0.3);
+}
+
+.product-actions .btn:hover {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(184, 149, 106, 0.4);
+}
+
+/* Section caractéristiques */
+.product-features {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: var(--bg-light);
+    border-radius: 15px;
+    border-top: 3px solid var(--secondary-color);
+}
+
+.product-features h3 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.product-features ul {
+    list-style: none;
+    padding: 0;
+}
+
+.product-features li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    color: var(--text-medium);
+}
+
+.product-features li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--secondary-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .product-detail {
+        grid-template-columns: 1fr;
+        padding: 2rem 1rem;
+    }
+    
+    .product-details h1 {
+        font-size: 2rem;
+    }
+    
+    .product-details .price {
+        font-size: 2.5rem;
+    }
+}
+

@@ -1,0 +1,259 @@
+/* ===== PAGES ADMIN - STYLE UNIQUE ===== */
+/* Identité visuelle : Professionnel, fonctionnel, sécurisé */
+
+/* Header admin */
+.admin-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #5A3E2E 100%);
+    color: white;
+    padding: 2rem;
+    border-bottom: 3px solid var(--secondary-color);
+    box-shadow: 0 4px 15px rgba(107, 78, 61, 0.3);
+}
+
+/* Tableaux admin améliorés */
+.admin-table {
+    background: var(--bg-white);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(107, 78, 61, 0.1);
+    border: 2px solid var(--border-light);
+}
+
+.admin-table th {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #5A3E2E 100%);
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 1.5rem;
+    border-bottom: 3px solid var(--secondary-color);
+}
+
+.admin-table td {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s ease;
+}
+
+.admin-table tr:hover {
+    background: var(--bg-light);
+    transform: scale(1.01);
+}
+
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Boutons admin */
+.btn-edit {
+    background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(184, 149, 106, 0.3);
+}
+
+.btn-edit:hover {
+    background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(184, 149, 106, 0.4);
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #8B6F47, #6B4E3D);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(139, 111, 71, 0.3);
+}
+
+.btn-delete:hover {
+    background: linear-gradient(135deg, #6B4E3D, #8B6F47);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(107, 78, 61, 0.4);
+}
+
+/* Formulaires admin */
+.admin-form {
+    background: linear-gradient(135deg, var(--bg-white), var(--bg-light));
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(107, 78, 61, 0.15);
+    border: 2px solid var(--border-light);
+    max-width: 800px;
+    margin: 2rem auto;
+}
+
+.admin-form h2 {
+    color: var(--primary-color);
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid var(--secondary-color);
+}
+
+.admin-form .form-group {
+    margin-bottom: 2rem;
+}
+
+.admin-form label {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.admin-form input,
+.admin-form textarea,
+.admin-form select {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: var(--bg-white);
+    color: var(--text-dark);
+}
+
+.admin-form input:focus,
+.admin-form textarea:focus,
+.admin-form select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 4px rgba(184, 149, 106, 0.1);
+    background: var(--bg-light);
+}
+
+/* Dashboard */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--bg-white), var(--bg-light));
+    padding: 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(107, 78, 61, 0.1);
+    border: 2px solid var(--border-light);
+    border-left: 5px solid var(--secondary-color);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(184, 149, 106, 0.2);
+    border-left-color: var(--primary-color);
+}
+
+.stat-card h3 {
+    color: var(--text-light);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-card .stat-value {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    font-weight: 800;
+    display: block;
+}
+
+/* Badges de statut */
+.status-badge {
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background: linear-gradient(135deg, #D4A574, #B8956A);
+    color: white;
+}
+
+.status-confirmed {
+    background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+    color: white;
+}
+
+.status-delivered {
+    background: linear-gradient(135deg, var(--wood-dark), var(--primary-color));
+    color: white;
+}
+
+.status-cancelled {
+    background: linear-gradient(135deg, #8B6F47, #6B4E3D);
+    color: white;
+}
+
+/* Messages de succès/erreur */
+.alert {
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    animation: slideIn 0.5s ease;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, var(--wood-dark), var(--secondary-color));
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 111, 71, 0.3);
+}
+
+.alert-error {
+    background: linear-gradient(135deg, #8B6F47, #6B4E3D);
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 111, 71, 0.3);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .admin-table {
+        font-size: 0.9rem;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 1rem 0.5rem;
+    }
+    
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-form {
+        padding: 2rem 1.5rem;
+    }
+}
+

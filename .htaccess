@@ -1,0 +1,23 @@
+# Configuration Apache pour Meubles de Maison
+
+# Activer le moteur de réécriture
+RewriteEngine On
+
+# Rediriger vers index.php si le fichier n'existe pas
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Protection des fichiers sensibles
+<FilesMatch "\.(sql|log|ini)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protection du dossier admin (optionnel - décommenter si nécessaire)
+# <Directory "admin">
+#     AuthType Basic
+#     AuthName "Zone Admin"
+#     AuthUserFile .htpasswd
+#     Require valid-user
+# </Directory>
+
