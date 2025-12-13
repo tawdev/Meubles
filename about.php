@@ -3,7 +3,10 @@ $pageTitle = "À propos";
 require_once 'includes/header.php';
 ?>
 
-<section class="hero" style="padding: 4rem 2rem;">
+<section class="hero" style="padding: 4rem 2rem; position: relative;">
+    <a href="index.php" style="position: absolute; top: 2rem; left: 2rem; display: inline-flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; padding: 0.75rem 1.25rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border-radius: 8px; transition: all 0.3s ease; font-size: 0.95rem; font-weight: 500; z-index: 10; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateX(-3px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateX(0)';">
+        ← Retour à l'accueil
+    </a>
     <div class="hero-content">
         <h1>À Propos de Meubles de Maison</h1>
         <p>Votre partenaire de confiance pour transformer votre intérieur</p>

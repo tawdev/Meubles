@@ -29,8 +29,13 @@ require_once __DIR__ . '/../db.php';
 <body>
     <header>
         <div class="header-container">
-            <a href="index.php" class="logo">Meubles de Maison</a>
-            <nav>
+            <a href="index.php" class="logo">frachdark</a>
+            <button class="menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav class="main-nav">
                 <ul>
                     <li><a href="index.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">Accueil</a></li>
                     <li><a href="products.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'products.php' || basename($_SERVER['PHP_SELF']) == 'product.php') ? 'active' : ''; ?>">Produits</a></li>

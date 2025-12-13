@@ -344,6 +344,49 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollAnimations();
     initCarousel();
 
+    // Menu burger mobile
+    const menuToggle = document.querySelector('.menu-toggle');
+    const mainNav = document.querySelector('.main-nav');
+
+    if (menuToggle && mainNav) {
+        // Toggle menu on burger click
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = mainNav.classList.toggle('is-open');
+            menuToggle.classList.toggle('active', isOpen);
+            menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        // Fermer le menu après un clic sur un lien
+        mainNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mainNav.classList.remove('is-open');
+                menuToggle.classList.remove('active');
+                menuToggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Fermer le menu en cliquant en dehors
+        document.addEventListener('click', (e) => {
+            if (mainNav.classList.contains('is-open')) {
+                if (!mainNav.contains(e.target) && !menuToggle.contains(e.target)) {
+                    mainNav.classList.remove('is-open');
+                    menuToggle.classList.remove('active');
+                    menuToggle.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+
+        // Fermer le menu avec la touche Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mainNav.classList.contains('is-open')) {
+                mainNav.classList.remove('is-open');
+                menuToggle.classList.remove('active');
+                menuToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
     // Ajouter les écouteurs de filtres
     const filterCategory = document.getElementById('filter-category');
     const filterPrice = document.getElementById('filter-price');

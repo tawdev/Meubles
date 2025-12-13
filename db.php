@@ -5,6 +5,12 @@ $dbname = 'meubles_db';
 $username = 'root';
 $password = '';
 
+// // Connexion à la base de données MySQL
+// $host = 'localhost';
+// $dbname = 'u627894251_frachdark';
+// $username = 'u627894251_u627894251_fra';
+// $password = 'yWI};>6umPfrachdark';
+
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

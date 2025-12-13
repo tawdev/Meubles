@@ -86,10 +86,18 @@ $categories = $stmt->fetchAll();
 // Catégorie à modifier
 $editCategory = null;
 if (isset($_GET['edit'])) {
-    $editId = $_GET['edit'];
-    $editStmt = $pdo->prepare("SELECT * FROM categories WHERE id = ?");
-    $editStmt->execute([$editId]);
-    $editCategory = $editStmt->fetch();
+    $editId = intval($_GET['edit']);
+    try {
+        $editStmt = $pdo->prepare("SELECT * FROM categories WHERE id = ?");
+        $editStmt->execute([$editId]);
+        $editCategory = $editStmt->fetch();
+        
+        if (!$editCategory) {
+            $error = 'Catégorie non trouvée.';
+        }
+    } catch (PDOException $e) {
+        $error = 'Erreur lors de la récupération de la catégorie : ' . $e->getMessage();
+    }
 }
 ?>
 
@@ -112,7 +120,7 @@ if (isset($_GET['edit'])) {
     <?php endif; ?>
 
     <!-- Formulaire d'ajout/modification (masqué par défaut) -->
-    <div id="add-form-container" style="display: <?php echo $editCategory ? 'block' : 'none'; ?>; margin-bottom: 2rem;">
+    <div id="add-form-container" style="display: <?php echo ($editCategory || isset($_GET['edit'])) ? 'block' : 'none'; ?>; margin-bottom: 2rem;">
         <div class="form-container">
             <h2 style="margin-bottom: 1rem; color: var(--primary-color);">
                 <?php echo $editCategory ? 'Modifier la catégorie' : 'Ajouter une nouvelle catégorie'; ?>
@@ -206,7 +214,9 @@ function toggleAddForm() {
     const formContainer = document.getElementById('add-form-container');
     const toggleBtn = document.getElementById('toggle-btn');
     
-    if (formContainer.style.display === 'none') {
+    if (!formContainer || !toggleBtn) return;
+    
+    if (formContainer.style.display === 'none' || formContainer.style.display === '') {
         formContainer.style.display = 'block';
         toggleBtn.textContent = '❌ Annuler';
         toggleBtn.style.background = 'var(--text-light)';
@@ -218,11 +228,32 @@ function toggleAddForm() {
     }
 }
 
-<?php if ($editCategory || $error): ?>
+// Initialiser le formulaire si on est en mode édition
 document.addEventListener('DOMContentLoaded', function() {
-    toggleAddForm();
+    const formContainer = document.getElementById('add-form-container');
+    const toggleBtn = document.getElementById('toggle-btn');
+    
+    <?php if ($editCategory || isset($_GET['edit'])): ?>
+    if (formContainer && toggleBtn) {
+        formContainer.style.display = 'block';
+        toggleBtn.textContent = '❌ Annuler';
+        toggleBtn.style.background = 'var(--text-light)';
+        // Scroll vers le formulaire après un court délai pour s'assurer que le DOM est prêt
+        setTimeout(function() {
+            formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+    <?php endif; ?>
+    
+    <?php if ($error && !isset($_GET['edit'])): ?>
+    // Afficher le formulaire s'il y a une erreur
+    if (formContainer && toggleBtn) {
+        formContainer.style.display = 'block';
+        toggleBtn.textContent = '❌ Annuler';
+        toggleBtn.style.background = 'var(--text-light)';
+    }
+    <?php endif; ?>
 });
-<?php endif; ?>
 </script>
 
 <?php require_once 'includes/footer.php'; ?>

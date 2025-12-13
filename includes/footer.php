@@ -48,7 +48,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; <?php echo date('Y'); ?> Meubles de Maison. Tous droits réservés.</p>
+            <p>&copy; <?php echo date('Y'); ?> C-Digital. Tous droits réservés.</p>
         </div>
     </footer>
     <script src="script.js"></script>

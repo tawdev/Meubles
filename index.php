@@ -33,9 +33,9 @@ $featuredProducts = $stmt->fetchAll();
 <section class="hero">
     <div class="hero-content">
         <h1 class="animated-title">
-            <span class="title-word">Meubles</span>
-            <span class="title-word">de</span>
-            <span class="title-word">Maison</span>
+            <span class="title-word">frach</span>
+            <span class="title-word">dark</span>
+            
         </h1>
         <p class="animated-subtitle">Découvrez notre collection exclusive de meubles modernes et élégants pour transformer votre intérieur</p>
         <a href="products.php" class="btn animated-btn">Découvrir nos produits</a>
@@ -45,9 +45,9 @@ $featuredProducts = $stmt->fetchAll();
 <div class="container">
     <!-- Section Catégories -->
     <section id="categories" style="min-height: 95vh; display: flex; flex-direction: column; justify-content: center; padding: 4rem 0;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h2 class="section-title" style="margin-bottom: 0;">Nos Catégories</h2>
-            <a href="categories.php" class="btn" style="padding: 0.75rem 1.5rem;">Voir toutes les catégories →</a>
+        <div class="categories-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2 class="section-title" style="margin-bottom: 0; margin-left: 1rem;">Nos Catégories</h2>
+            <a href="categories.php" class="btn view-all-categories-btn view-all-desktop" style="padding: 0.75rem 1.5rem;">Voir toutes les catégories →</a>
         </div>
         <div class="categories">
             <?php foreach (array_slice($categoriesList, 0, 5) as $category): ?>
@@ -56,6 +56,9 @@ $featuredProducts = $stmt->fetchAll();
                     <h3><?php echo htmlspecialchars($category['name']); ?></h3>
                 </a>
             <?php endforeach; ?>
+        </div>
+        <div class="view-all-mobile" style="text-align: center; margin-top: 2rem; display: none;">
+            <a href="categories.php" class="btn" style="padding: 0.75rem 1.5rem;">Voir toutes les catégories →</a>
         </div>
     </section>
 
@@ -193,27 +196,60 @@ $featuredProducts = $stmt->fetchAll();
 }
 
 @media (max-width: 768px) {
+    #gallery {
+        padding: 3rem 0 !important;
+        margin: 2rem 0 !important;
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+        overflow-x: hidden;
+    }
+
+    #gallery .container {
+        padding: 0 0.75rem;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
     .parent {
         grid-template-columns: 1fr;
         grid-template-rows: repeat(5, minmax(250px, 1fr));
         grid-column-gap: 0px;
         grid-row-gap: 16px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     .div1, .div2, .div3, .div4, .div5 {
         grid-area: auto !important;
         grid-row: span 1;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 }
 
 @media (max-width: 480px) {
+    #gallery {
+        padding: 2rem 0 !important;
+        margin: 1.5rem 0 !important;
+    }
+
     .parent {
         grid-row-gap: 12px;
+        padding: 0;
     }
     .gallery-card {
         border-radius: 18px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     .gallery-card img {
         border-radius: 18px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 }
 
@@ -228,12 +264,19 @@ $featuredProducts = $stmt->fetchAll();
     margin: 0 -2rem;
     padding-left: 2rem;
     padding-right: 2rem;
+    box-sizing: border-box;
+    width: calc(100% + 4rem);
+    max-width: 100vw;
 }
 
 @media (max-width: 768px) {
     #categories {
         min-height: auto;
         padding: 3rem 0;
+        margin: 0;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        width: 100%;
     }
 }
 

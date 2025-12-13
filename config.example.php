@@ -10,6 +10,12 @@ define('DB_NAME', 'meubles_db');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
+// // Connexion à la base de données MySQL
+// $host = 'localhost';
+// $dbname = 'u627894251_frachdark';
+// $username = 'u627894251_u627894251_fra';
+// $password = 'yWI};>6umPfrachdark';
+
 // Configuration du site
 define('SITE_NAME', 'Meubles de Maison');
 define('SITE_URL', 'http://localhost/MeublesMaison');

@@ -2,8 +2,9 @@
 $pageTitle = "Nos Produits";
 require_once 'includes/header.php';
 
-// Récupérer la catégorie depuis l'URL si présente
+// Récupérer la catégorie et le type depuis l'URL si présents
 $selectedCategory = $_GET['category'] ?? '';
+$selectedTypeCategory = $_GET['type_category'] ?? '';
 
 // Récupérer les catégories
 try {
@@ -12,20 +13,59 @@ try {
 } catch (PDOException $e) {
     // Si la table categories n'existe pas, utiliser les catégories par défaut
     $categoriesList = [
-        ['name' => 'Salon', 'icon' => '🛋️'],
-        ['name' => 'Chambre', 'icon' => '🛏️'],
-        ['name' => 'Salle à manger', 'icon' => '🍽️'],
-        ['name' => 'Bureau', 'icon' => '💼'],
-        ['name' => 'Décoration', 'icon' => '🖼️']
+        ['id' => 1, 'name' => 'Salon', 'icon' => '🛋️'],
+        ['id' => 2, 'name' => 'Chambre', 'icon' => '🛏️'],
+        ['id' => 3, 'name' => 'Salle à manger', 'icon' => '🍽️'],
+        ['id' => 4, 'name' => 'Bureau', 'icon' => '💼'],
+        ['id' => 5, 'name' => 'Décoration', 'icon' => '🖼️']
     ];
 }
 
-// Récupérer tous les produits
-$stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
-$allProducts = $stmt->fetchAll();
+// Trouver l'ID de la catégorie sélectionnée
+$selectedCategoryId = null;
+if ($selectedCategory) {
+    foreach ($categoriesList as $cat) {
+        if (isset($cat['name']) && $cat['name'] === $selectedCategory) {
+            $selectedCategoryId = isset($cat['id']) ? $cat['id'] : null;
+            break;
+        }
+    }
+}
+
+// Récupérer les types de catégorie si une catégorie est sélectionnée
+$typesList = [];
+if ($selectedCategoryId) {
+    try {
+        $typesStmt = $pdo->prepare("SELECT * FROM types_categories WHERE category_id = ? ORDER BY name");
+        $typesStmt->execute([$selectedCategoryId]);
+        $typesList = $typesStmt->fetchAll();
+    } catch (PDOException $e) {
+        $typesList = [];
+    }
+}
+
+// Récupérer tous les produits avec leurs types de catégorie
+try {
+    $stmt = $pdo->query("
+        SELECT p.*, 
+               tc.name as type_category_name,
+               tc.id as type_category_id
+        FROM products p
+        LEFT JOIN types_categories tc ON p.type_category_id = tc.id
+        ORDER BY p.id DESC
+    ");
+    $allProducts = $stmt->fetchAll();
+} catch (PDOException $e) {
+    // Si la jointure échoue, récupérer sans types
+    $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
+    $allProducts = $stmt->fetchAll();
+}
 ?>
 
-<section class="hero" style="padding: 4rem 2rem;">
+<section class="hero" style="padding: 4rem 2rem; position: relative;">
+    <a href="index.php" style="position: absolute; top: 2rem; left: 2rem; display: inline-flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; padding: 0.75rem 1.25rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border-radius: 8px; transition: all 0.3s ease; font-size: 0.95rem; font-weight: 500; z-index: 10; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateX(-3px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateX(0)';">
+        ← Retour à l'accueil
+    </a>
     <div class="hero-content">
         <h1>Notre Catalogue Complet</h1>
         <p>Découvrez tous nos meubles et trouvez celui qui correspond à vos besoins</p>
@@ -45,31 +85,35 @@ $allProducts = $stmt->fetchAll();
         <!-- Filtres améliorés -->
         <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid rgba(0,0,0,0.05);">
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 200px;">
-                    <select id="filter-category" onchange="filterProducts()" 
+                <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 200px; order: 0;">
+                    <select id="filter-category" onchange="onCategoryChange()" 
                             style="flex: 1; padding: 0.875rem 1rem; border: none; border-radius: 8px; font-size: 0.95rem; background: white; color: var(--text-dark); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.08); transition: all 0.3s ease; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'><path fill=\'%23333\' d=\'M6 9L1 4h10z\'/></svg>'); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem;">
                         <option value="all">Toutes les catégories</option>
                         <?php foreach ($categoriesList as $category): ?>
-                            <option value="<?php echo htmlspecialchars($category['name']); ?>" 
-                                    <?php echo $selectedCategory === $category['name'] ? 'selected' : ''; ?>>
+                            <option value="<?php echo isset($category['id']) ? $category['id'] : htmlspecialchars($category['name']); ?>" 
+                                    data-name="<?php echo htmlspecialchars($category['name']); ?>"
+                                    <?php echo ($selectedCategory === $category['name'] || (isset($category['id']) && $selectedCategoryId == $category['id'])) ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($category['icon'] ?? ''); ?> <?php echo htmlspecialchars($category['name']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 200px;">
-                    <select id="filter-price" onchange="filterProducts()" 
-                            style="flex: 1; padding: 0.875rem 1rem; border: none; border-radius: 8px; font-size: 0.95rem; background: white; color: var(--text-dark); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.08); transition: all 0.3s ease; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'><path fill=\'%23333\' d=\'M6 9L1 4h10z\'/></svg>'); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem;">
-                        <option value="all">Tous les prix</option>
-                        <option value="0-200">Moins de 2000 DH</option>
-                        <option value="200-500">2000 DH - 5000 DH</option>
-                        <option value="500-1000">5000 DH - 10000 DH</option>
-                        <option value="1000-max">Plus de 10000 DH</option>
+                <div id="type-category-filter-container" class="hidden" style="display: none; align-items: center; gap: 1rem; flex: 1; min-width: 200px; order: 1;">
+                    <label for="filter-type-category" style="display: none;">Type de catégorie</label>
+                    <select id="filter-type-category" onchange="filterProducts()" 
+                            style="flex: 1; padding: 0.875rem 1rem; border: none; border-radius: 8px; font-size: 0.95rem; background: white; color: var(--text-dark); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.08); transition: all 0.3s ease; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'><path fill=\'%23333\' d=\'M6 9L1 4h10z\'/></svg>'); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; width: 100%;">
+                        <option value="all">Tous les types</option>
+                        <?php foreach ($typesList as $type): ?>
+                            <option value="<?php echo $type['id']; ?>" 
+                                    <?php echo ($selectedTypeCategory && $selectedTypeCategory == $type['id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($type['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 0.5rem; flex: 2; min-width: 250px; position: relative;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex: 2; min-width: 250px; position: relative; order: 2;">
                     <input type="text" id="search-products" 
                            placeholder="Rechercher un produit..." 
                            oninput="filterProducts()"
@@ -78,7 +122,7 @@ $allProducts = $stmt->fetchAll();
                 </div>
                 
                 <button onclick="resetFilters()" 
-                        style="padding: 0.875rem 1.5rem; border: none; border-radius: 8px; font-size: 0.95rem; background: var(--primary-color); color: white; cursor: pointer; font-weight: 600; transition: all 0.3s ease; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"
+                        style="padding: 0.875rem 1.5rem; border: none; border-radius: 8px; font-size: 0.95rem; background: var(--primary-color); color: white; cursor: pointer; font-weight: 600; transition: all 0.3s ease; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.1); order: 3;"
                         onmouseover="this.style.background='#1a252f'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
                         onmouseout="this.style.background='var(--primary-color)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.1)';">
                     Réinitialiser
@@ -98,6 +142,9 @@ $allProducts = $stmt->fetchAll();
                 <?php foreach ($allProducts as $product): ?>
                     <div class="product-card" data-id="<?php echo $product['id']; ?>" 
                          data-category="<?php echo htmlspecialchars($product['category']); ?>" 
+                         data-category-id="<?php echo $product['category_id'] ?? ''; ?>"
+                         data-type-category-id="<?php echo $product['type_category_id'] ?? ''; ?>"
+                         data-type-category-name="<?php echo htmlspecialchars($product['type_category_name'] ?? ''); ?>"
                          data-price="<?php echo $product['price']; ?>"
                          style="overflow: hidden; position: relative;">
                         <!-- Badge catégorie -->
@@ -162,7 +209,7 @@ $allProducts = $stmt->fetchAll();
 
 /* Amélioration des filtres */
 #filter-category:focus,
-#filter-price:focus,
+#filter-type-category:focus,
 #search-products:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15), 0 4px 10px rgba(0,0,0,0.1);
@@ -170,12 +217,69 @@ $allProducts = $stmt->fetchAll();
 }
 
 #filter-category:hover,
-#filter-price:hover {
+#filter-type-category:hover {
     box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
 #search-products:hover {
     box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+/* Style pour le conteneur des types de catégories */
+#type-category-filter-container {
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+#type-category-filter-container:not(.hidden) {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 10 !important;
+    background: transparent !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    order: 1 !important;
+}
+
+/* Forcer l'affichage même si la classe hidden est présente mais override par JS */
+#type-category-filter-container[style*="display: flex"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+#type-category-filter-container.hidden {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+    width: 0 !important;
+}
+
+#filter-type-category {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    min-width: 200px !important;
+}
+
+#filter-type-category:disabled {
+    opacity: 0.6 !important;
+    cursor: wait !important;
 }
 
 /* Animation pour le compteur */
@@ -223,9 +327,158 @@ function filterProductsByCategory(category) {
 
 function resetFilters() {
     document.getElementById('filter-category').value = 'all';
-    document.getElementById('filter-price').value = 'all';
     document.getElementById('search-products').value = '';
+    const typeFilter = document.getElementById('filter-type-category');
+    if (typeFilter) {
+        typeFilter.value = 'all';
+    }
+    const typeContainer = document.getElementById('type-category-filter-container');
+    if (typeContainer) {
+        typeContainer.classList.add('hidden');
+        typeContainer.style.display = 'none';
+    }
     filterProducts();
+}
+
+// Charger les types de catégorie
+function loadTypesByCategory(categoryId) {
+    const typeSelect = document.getElementById('filter-type-category');
+    const typeContainer = document.getElementById('type-category-filter-container');
+    
+    if (!typeSelect || !typeContainer) {
+        return;
+    }
+    
+    // Réinitialiser
+    typeSelect.innerHTML = '<option value="all">Tous les types</option>';
+    typeSelect.value = 'all';
+    
+    if (!categoryId || categoryId === 'all' || categoryId === '' || categoryId === '0') {
+        typeContainer.classList.add('hidden');
+        typeContainer.style.display = 'none';
+        return;
+    }
+    
+    // Afficher le conteneur immédiatement
+    typeContainer.classList.remove('hidden');
+    typeContainer.style.display = 'flex';
+    typeContainer.style.visibility = 'visible';
+    typeContainer.style.opacity = '1';
+    typeContainer.style.width = 'auto';
+    typeContainer.style.minWidth = '200px';
+    typeContainer.style.maxHeight = 'none';
+    typeContainer.style.overflow = 'visible';
+    
+    typeSelect.disabled = true;
+    typeSelect.innerHTML = '<option value="all">Chargement...</option>';
+    
+    // Charger les types via AJAX
+    const apiUrl = `admin/get_types_by_category.php?category_id=${categoryId}`;
+    
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erreur réseau: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            typeSelect.disabled = false;
+            typeSelect.innerHTML = '<option value="all">Tous les types</option>';
+            
+            if (data.success && data.types && data.types.length > 0) {
+                data.types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.id;
+                    option.textContent = type.name;
+                    typeSelect.appendChild(option);
+                });
+            } else {
+                // Ajouter une option pour indiquer qu'il n'y a pas de types
+                const noTypeOption = document.createElement('option');
+                noTypeOption.value = 'none';
+                noTypeOption.textContent = 'Aucun type disponible';
+                noTypeOption.disabled = true;
+                typeSelect.appendChild(noTypeOption);
+            }
+            
+            // Forcer l'affichage - TOUJOURS afficher même s'il n'y a pas de types
+            typeContainer.classList.remove('hidden');
+            
+            // Forcer le reflow avant de modifier les styles
+            void typeContainer.offsetHeight;
+            
+            // Nettoyer tous les styles inline et réappliquer
+            typeContainer.removeAttribute('style');
+            
+            // Réappliquer seulement les styles nécessaires avec setProperty pour forcer
+            typeContainer.style.setProperty('display', 'flex', 'important');
+            typeContainer.style.setProperty('visibility', 'visible', 'important');
+            typeContainer.style.setProperty('opacity', '1', 'important');
+            typeContainer.style.setProperty('align-items', 'center', 'important');
+            typeContainer.style.setProperty('gap', '1rem', 'important');
+            typeContainer.style.setProperty('flex', '1', 'important');
+            typeContainer.style.setProperty('min-width', '200px', 'important');
+            typeContainer.style.setProperty('position', 'relative', 'important');
+            typeContainer.style.setProperty('z-index', '10', 'important');
+            typeContainer.style.setProperty('margin', '0', 'important');
+            typeContainer.style.setProperty('padding', '0', 'important');
+            typeContainer.style.setProperty('order', '1', 'important');
+            
+            // S'assurer que le select est aussi visible
+            typeSelect.style.setProperty('display', 'block', 'important');
+            typeSelect.style.setProperty('visibility', 'visible', 'important');
+            typeSelect.style.setProperty('opacity', '1', 'important');
+            typeSelect.style.setProperty('width', '100%', 'important');
+            typeSelect.style.setProperty('min-width', '200px', 'important');
+            typeSelect.style.setProperty('flex', '1', 'important');
+            
+            // Forcer le reflow après modification
+            void typeContainer.offsetHeight;
+            void typeSelect.offsetHeight;
+            
+            // Scroll vers l'élément pour s'assurer qu'il est visible
+            typeContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+            
+            // Vérifier que l'élément est bien affiché
+            const rect = typeContainer.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                console.log('✅ Filtre de type de catégorie affiché avec succès');
+            }
+        })
+        .catch(error => {
+            console.error('❌ ERREUR lors du chargement des types:', error);
+            console.error('Détails:', error.message);
+            typeSelect.disabled = false;
+            typeSelect.innerHTML = '<option value="all">Tous les types</option>';
+            // Masquer en cas d'erreur
+            typeContainer.classList.add('hidden');
+            typeContainer.style.display = 'none';
+        });
+}
+
+// Gérer le changement de catégorie
+function onCategoryChange() {
+    const categorySelect = document.getElementById('filter-category');
+    if (!categorySelect) {
+        return;
+    }
+    
+    const categoryId = categorySelect.value;
+    
+    // Réinitialiser le filtre de type
+    const typeFilter = document.getElementById('filter-type-category');
+    if (typeFilter) {
+        typeFilter.value = 'all';
+    }
+    
+    // Charger les types pour cette catégorie
+    loadTypesByCategory(categoryId);
+    
+    // Appliquer le filtre après un court délai pour laisser le temps de charger les types
+    setTimeout(function() {
+        filterProducts();
+    }, 300);
 }
 
 // Mettre à jour le compteur de résultats
@@ -249,59 +502,226 @@ function updateResultsCount() {
     }
 }
 
-// Modifier la fonction filterProducts pour mettre à jour le compteur
-const originalFilterProducts = window.filterProducts;
-window.filterProducts = function() {
-    if (originalFilterProducts) {
-        originalFilterProducts();
-    } else {
-        // Fonction de base si elle n'existe pas
+// La fonction filterProducts sera redéfinie après le chargement de script.js
+// pour supporter type_category_id
+
+// Initialiser le compteur au chargement et appliquer les filtres si une catégorie est sélectionnée
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM Content Loaded - Initialisation');
+    
+    // S'assurer que tous les produits sont visibles par défaut
+    const productCards = document.querySelectorAll('.product-card');
+    console.log('📦 Produits trouvés dans le DOM:', productCards.length);
+    
+    productCards.forEach(card => {
+        if (!card.style.display || card.style.display === 'none') {
+            card.style.display = 'flex';
+        }
+    });
+    
+    updateResultsCount();
+    
+    const typeContainer = document.getElementById('type-category-filter-container');
+    const categorySelect = document.getElementById('filter-category');
+    
+    <?php if ($selectedCategoryId): ?>
+        // Charger les types si une catégorie est sélectionnée
+        if (typeContainer) {
+            typeContainer.classList.remove('hidden');
+            typeContainer.style.display = 'flex';
+        }
+        setTimeout(function() {
+            loadTypesByCategory(<?php echo $selectedCategoryId; ?>);
+        }, 100);
+    <?php endif; ?>
+    
+    <?php if ($selectedCategory || $selectedTypeCategory): ?>
+        // Appliquer le filtre si présent dans l'URL
+        setTimeout(function() {
+            filterProducts();
+        }, 200);
+    <?php else: ?>
+        // Si aucun filtre dans l'URL, s'assurer que tous les produits sont visibles
+        console.log('📋 Aucun filtre dans l\'URL, affichage de tous les produits');
+        
+        // Forcer l'affichage de tous les produits immédiatement
+        productCards.forEach(card => {
+            card.style.display = 'flex';
+        });
+        updateResultsCount();
+        
+        // Appeler filterProducts pour s'assurer que tous les produits sont visibles
+        setTimeout(function() {
+            console.log('🔄 Appel de filterProducts après 100ms');
+            filterProducts();
+        }, 100);
+    <?php endif; ?>
+    
+    // S'assurer que le select de catégorie fonctionne correctement
+    if (categorySelect && categorySelect.value && categorySelect.value !== 'all') {
+        setTimeout(function() {
+            loadTypesByCategory(categorySelect.value);
+        }, 150);
+    }
+});
+
+// S'assurer que filterProducts est définie après le chargement de script.js
+window.addEventListener('load', function() {
+    console.log('📦 Page complètement chargée, redéfinition de filterProducts');
+    
+    // Redéfinir filterProducts pour supporter type_category_id
+    window.filterProducts = function() {
+        console.log('🚀 filterProducts appelée (version mise à jour)');
+        
         const category = document.getElementById('filter-category')?.value || 'all';
-        const priceRange = document.getElementById('filter-price')?.value || 'all';
         const searchTerm = document.getElementById('search-products')?.value.toLowerCase() || '';
 
         const productCards = document.querySelectorAll('.product-card');
         
-        productCards.forEach(card => {
+        const typeCategory = document.getElementById('filter-type-category')?.value || 'all';
+        
+        console.log('🔍 Filtrage des produits:', {
+            category,
+            typeCategory,
+            searchTerm,
+            totalProducts: productCards.length
+        });
+        
+        if (productCards.length === 0) {
+            console.warn('⚠️ Aucun produit trouvé dans le DOM!');
+            return;
+        }
+        
+        let visibleCount = 0;
+        let hiddenByCategory = 0;
+        let hiddenByType = 0;
+        let hiddenBySearch = 0;
+        
+        productCards.forEach((card, index) => {
             const productCategory = card.dataset.category || '';
-            const productPrice = parseFloat(card.dataset.price || 0);
+            const productCategoryId = card.dataset.categoryId || '';
+            const productTypeCategoryId = card.dataset.typeCategoryId || '';
+            const productName = card.querySelector('.product-name')?.textContent || '';
             
             let show = true;
+            let reason = '';
 
-            if (category !== 'all' && productCategory !== category) {
-                show = false;
-            }
-
-            if (priceRange !== 'all') {
-                const [min, max] = priceRange.split('-').map(p => p === 'max' ? Infinity : parseFloat(p));
-                if (productPrice < min || productPrice > max) {
-                    show = false;
+            // Filtre par catégorie (par ID ou nom)
+            if (category !== 'all' && category !== '') {
+                const categorySelect = document.getElementById('filter-category');
+                if (categorySelect && categorySelect.selectedIndex >= 0) {
+                    const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                    const categoryName = selectedOption ? (selectedOption.dataset.name || selectedOption.textContent.replace(/[^\w\s]/g, '').trim()) : '';
+                    const categoryIdValue = selectedOption ? selectedOption.value : '';
+                    
+                    // Debug pour les 3 premiers produits
+                    if (index < 3) {
+                        console.log('🔍 Debug catégorie:', {
+                            category,
+                            categoryIdValue,
+                            categoryName,
+                            productCategoryId,
+                            productCategory,
+                            matchID: categoryIdValue && productCategoryId && parseInt(productCategoryId) === parseInt(categoryIdValue),
+                            matchName: categoryName && productCategory && productCategory.toLowerCase() === categoryName.toLowerCase(),
+                            matchDirect: category === productCategory
+                        });
+                    }
+                    
+                    // Vérifier par ID d'abord
+                    if (categoryIdValue && productCategoryId && parseInt(productCategoryId) === parseInt(categoryIdValue)) {
+                        reason = 'match category ID';
+                    } 
+                    // Vérifier par nom
+                    else if (categoryName && productCategory && productCategory.toLowerCase() === categoryName.toLowerCase()) {
+                        reason = 'match category name';
+                    }
+                    // Vérifier si la valeur est directement le nom
+                    else if (category === productCategory) {
+                        reason = 'match category direct';
+                    }
+                    // Vérifier si category est l'ID et productCategoryId correspond
+                    else if (category && productCategoryId && parseInt(category) === parseInt(productCategoryId)) {
+                        reason = 'match category by ID direct';
+                    }
+                    else {
+                        show = false;
+                        reason = 'category mismatch';
+                        hiddenByCategory++;
+                    }
+                } else {
+                    // Fallback: vérifier par nom seulement
+                    if (productCategory !== category) {
+                        show = false;
+                        reason = 'category fallback mismatch';
+                        hiddenByCategory++;
+                    }
                 }
             }
 
-            if (searchTerm) {
-                const productName = card.querySelector('.product-name')?.textContent.toLowerCase() || '';
-                const productDesc = card.querySelector('.product-description')?.textContent.toLowerCase() || '';
-                if (!productName.includes(searchTerm) && !productDesc.includes(searchTerm)) {
+            // Filtre par type de catégorie
+            if (show && typeCategory !== 'all' && typeCategory !== '' && typeCategory !== 'none') {
+                if (productTypeCategoryId && productTypeCategoryId !== typeCategory) {
                     show = false;
+                    reason = 'type mismatch: ' + productTypeCategoryId + ' !== ' + typeCategory;
+                    hiddenByType++;
+                } else if (!productTypeCategoryId && typeCategory !== 'all') {
+                    show = false;
+                    reason = 'no type_category_id';
+                    hiddenByType++;
+                }
+            }
+
+            // Filtre par recherche
+            if (show && searchTerm) {
+                const productNameLower = card.querySelector('.product-name')?.textContent.toLowerCase() || '';
+                const productDesc = card.querySelector('.product-description')?.textContent.toLowerCase() || '';
+                if (!productNameLower.includes(searchTerm) && !productDesc.includes(searchTerm)) {
+                    show = false;
+                    reason = 'search term not found';
+                    hiddenBySearch++;
                 }
             }
 
             card.style.display = show ? 'flex' : 'none';
+            
+            if (show) {
+                visibleCount++;
+            } else if (index < 3) {
+                console.log('❌ Produit caché:', productName, '- Raison:', reason, {
+                    productCategory,
+                    productCategoryId,
+                    productTypeCategoryId,
+                    category,
+                    typeCategory
+                });
+            }
         });
-    }
+        
+        console.log('✅ Résultats du filtrage:', {
+            visibles: visibleCount,
+            total: productCards.length,
+            cachésParCatégorie: hiddenByCategory,
+            cachésParType: hiddenByType,
+            cachésParRecherche: hiddenBySearch
+        });
     
-    // Mettre à jour le compteur
-    updateResultsCount();
-};
-
-// Initialiser le compteur au chargement et appliquer les filtres si une catégorie est sélectionnée
-document.addEventListener('DOMContentLoaded', function() {
-    updateResultsCount();
-    <?php if ($selectedCategory): ?>
-        // Appliquer le filtre de catégorie si présent dans l'URL
+        updateResultsCount();
+    };
+    
+    // Réappliquer les filtres après la redéfinition
+    const categorySelect = document.getElementById('filter-category');
+    if (categorySelect && categorySelect.value && categorySelect.value !== 'all') {
+        console.log('🔄 Réapplication des filtres après redéfinition');
         filterProducts();
-    <?php endif; ?>
+    } else {
+        // S'assurer que tous les produits sont visibles
+        const productCards = document.querySelectorAll('.product-card');
+        productCards.forEach(card => {
+            card.style.display = 'flex';
+        });
+        updateResultsCount();
+    }
 });
 </script>
 

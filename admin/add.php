@@ -15,7 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $name = trim($_POST['name'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $price = $_POST['price'] ?? '';
-    $category = trim($_POST['category'] ?? '');
+    $categoryId = intval($_POST['category_id'] ?? 0);
+    $typeCategoryId = !empty($_POST['type_category_id']) ? intval($_POST['type_category_id']) : null;
+    $category = trim($_POST['category'] ?? ''); // Garder pour compatibilité
     $stock = $_POST['stock'] ?? 0;
     
     // Gestion de l'upload d'image
@@ -34,14 +36,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
     
-    if (empty($name) || empty($price) || empty($category)) {
+    if (empty($name) || empty($price) || empty($categoryId)) {
         $error = 'Veuillez remplir tous les champs obligatoires.';
     } elseif (!is_numeric($price) || $price <= 0) {
         $error = 'Le prix doit être un nombre positif.';
     } else {
         try {
-            $stmt = $pdo->prepare("INSERT INTO products (name, description, price, image, category, stock) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$name, $description, $price, $image ?: 'images/placeholder.jpg', $category, $stock]);
+            // Récupérer le nom de la catégorie pour compatibilité
+            if ($categoryId > 0) {
+                $catStmt = $pdo->prepare("SELECT name FROM categories WHERE id = ?");
+                $catStmt->execute([$categoryId]);
+                $catData = $catStmt->fetch();
+                $category = $catData ? $catData['name'] : $category;
+            }
+            
+            $stmt = $pdo->prepare("INSERT INTO products (name, description, price, image, category, category_id, type_category_id, stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $description, $price, $image ?: 'images/placeholder.jpg', $category, $categoryId, $typeCategoryId, $stock]);
             $success = true;
             $_POST = []; // Réinitialiser le formulaire
         } catch (PDOException $e) {
@@ -116,15 +126,23 @@ $products = $stmt->fetchAll();
                 </div>
                 
                 <div class="form-group">
-                    <label for="category">Catégorie *</label>
-                    <select id="category" name="category" required>
+                    <label for="category_id">Catégorie *</label>
+                    <select id="category_id" name="category_id" required>
                         <option value="">Sélectionner une catégorie</option>
                         <?php foreach ($categoriesList as $cat): ?>
-                            <option value="<?php echo htmlspecialchars($cat['name']); ?>" 
-                                    <?php echo (isset($_POST['category']) && $_POST['category'] === $cat['name']) ? 'selected' : ''; ?>>
+                            <option value="<?php echo $cat['id']; ?>" 
+                                    <?php echo (isset($_POST['category_id']) && $_POST['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($cat['icon'] ?? ''); ?> <?php echo htmlspecialchars($cat['name']); ?>
                             </option>
                         <?php endforeach; ?>
+                    </select>
+                    <input type="hidden" id="category" name="category" value="<?php echo isset($_POST['category']) ? htmlspecialchars($_POST['category']) : ''; ?>">
+                </div>
+                
+                <div class="form-group" id="type-category-group" style="display: none;">
+                    <label for="type_category_id">Type de catégorie</label>
+                    <select id="type_category_id" name="type_category_id">
+                        <option value="">Sélectionner un type (optionnel)</option>
                     </select>
                 </div>
                 
@@ -222,12 +240,67 @@ function toggleAddForm() {
     }
 }
 
-// Afficher le formulaire si on vient de soumettre avec une erreur
-<?php if ($error): ?>
+// Charger les types de catégorie
+function loadTypesByCategory(categoryId) {
+    const typeSelect = document.getElementById('type_category_id');
+    const typeGroup = document.getElementById('type-category-group');
+    const categoryInput = document.getElementById('category');
+    
+    // Réinitialiser le select des types
+    typeSelect.innerHTML = '<option value="">Sélectionner un type (optionnel)</option>';
+    
+    if (!categoryId || categoryId === '') {
+        typeGroup.style.display = 'none';
+        categoryInput.value = '';
+        return;
+    }
+    
+    // Récupérer le nom de la catégorie
+    const categorySelect = document.getElementById('category_id');
+    const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+    categoryInput.value = selectedOption.textContent.replace(/[^\w\s]/g, '').trim();
+    
+    // Charger les types via AJAX
+    fetch(`get_types_by_category.php?category_id=${categoryId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.types.length > 0) {
+                data.types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.id;
+                    option.textContent = type.name;
+                    typeSelect.appendChild(option);
+                });
+                typeGroup.style.display = 'block';
+            } else {
+                typeGroup.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des types:', error);
+            typeGroup.style.display = 'none';
+        });
+}
+
+// Écouter les changements de catégorie
 document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('category_id');
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            loadTypesByCategory(this.value);
+        });
+        
+        // Charger les types si une catégorie est déjà sélectionnée
+        if (categorySelect.value) {
+            loadTypesByCategory(categorySelect.value);
+        }
+    }
+    
+    // Afficher le formulaire si on vient de soumettre avec une erreur
+    <?php if ($error): ?>
     toggleAddForm();
+    <?php endif; ?>
 });
-<?php endif; ?>
 </script>
 
 <?php require_once 'includes/footer.php'; ?>

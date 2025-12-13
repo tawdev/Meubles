@@ -145,5 +145,34 @@
     #why-us {
         padding: 3rem 0;
     }
+
+    /* Réorganiser l'ordre sur mobile : titre -> catégories -> bouton */
+    .categories-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem;
+        margin-bottom: 2rem !important;
+    }
+
+    .categories-header .section-title {
+        margin-left: 2rem !important;
+    }
+
+    /* Cacher le bouton desktop sur mobile */
+    .view-all-desktop {
+        display: none !important;
+    }
+
+    /* Afficher le bouton mobile sous les catégories */
+    .view-all-mobile {
+        display: block !important;
+    }
+}
+
+/* Desktop : cacher le bouton mobile */
+@media (min-width: 769px) {
+    .view-all-mobile {
+        display: none !important;
+    }
 }
 
