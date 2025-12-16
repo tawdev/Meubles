@@ -18,7 +18,7 @@
             <div class="footer-section">
                 <h3>Contact</h3>
                 <p>📧 contact@meublesmaison.com</p>
-                <p>📞 +212 674-862173</p>
+                <p>📞 +212 524308038</p>
                 <p>📍N, TAW10, lot Iguder, 48 AV Alla El Fassi Marrakech 40000, Morocco</p>
             </div>
             <div class="footer-section">

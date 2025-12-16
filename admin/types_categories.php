@@ -115,7 +115,12 @@ if (isset($_GET['edit'])) {
 <div class="admin-container">
     <div class="admin-header">
         <h1>Gestion des types de catégories</h1>
-        <button onclick="toggleAddForm()" class="btn" id="toggle-btn">➕ Ajouter un type</button>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button onclick="toggleAddForm()" class="btn" id="toggle-btn">➕ Ajouter un type</button>
+            <a href="insert_all_types.php" class="btn" style="background: var(--secondary-color); text-decoration: none;">
+                🚀 Insérer tous les types
+            </a>
+        </div>
     </div>
 
     <?php if ($success): ?>
