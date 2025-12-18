@@ -12,7 +12,6 @@ INSERT INTO categories (name, description, icon) VALUES
 ('Salon', 'Meubles pour le salon : canapés, tables basses, fauteuils', '🛋️')
 ON DUPLICATE KEY UPDATE name=name;
 
--- Insérer les types de catégories pour Bureau
 INSERT IGNORE INTO types_categories (name, category_id) 
 SELECT 'Bureau droit', id FROM categories WHERE name = 'Bureau' LIMIT 1;
 
@@ -30,6 +29,16 @@ SELECT 'Étagère de bureau', id FROM categories WHERE name = 'Bureau' LIMIT 1;
 
 INSERT IGNORE INTO types_categories (name, category_id) 
 SELECT 'Caisson de rangement', id FROM categories WHERE name = 'Bureau' LIMIT 1;
+
+-- Nouveaux types Bureau
+INSERT IGNORE INTO types_categories (name, category_id) 
+SELECT 'Bureau sur mesure', id FROM categories WHERE name = 'Bureau' LIMIT 1;
+
+INSERT IGNORE INTO types_categories (name, category_id) 
+SELECT 'Bureau moderne', id FROM categories WHERE name = 'Bureau' LIMIT 1;
+
+INSERT IGNORE INTO types_categories (name, category_id) 
+SELECT 'Bureau classique', id FROM categories WHERE name = 'Bureau' LIMIT 1;
 
 -- Insérer les types de catégories pour Chambre
 INSERT IGNORE INTO types_categories (name, category_id) 

@@ -13,22 +13,28 @@ try {
     $hasStockColumn = $checkColumn->rowCount() > 0;
     
     if ($hasStockColumn) {
-        $statsStmt = $pdo->query("SELECT 
-            COUNT(*) as total_products,
-            SUM(stock) as total_stock,
-            (SELECT COUNT(*) FROM orders) as total_orders,
-            (SELECT SUM(total_amount) FROM orders) as total_revenue
+        // Statistiques complètes avec stock
+        // Chiffre d'affaires calculé uniquement sur les commandes livrées
+        $statsStmt = $pdo->query("
+            SELECT 
+                COUNT(*) AS total_products,
+                COALESCE(SUM(stock), 0) AS total_stock,
+                (SELECT COUNT(*) FROM orders) AS total_orders,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE status = 'Livrée') AS total_revenue
+            FROM products
         ");
     } else {
-        // Si la colonne stock n'existe pas, ne pas l'inclure dans la requête
-        $statsStmt = $pdo->query("SELECT 
-            COUNT(*) as total_products,
-            0 as total_stock,
-            (SELECT COUNT(*) FROM orders) as total_orders,
-            (SELECT SUM(total_amount) FROM orders) as total_revenue
+        // Statistiques sans colonne stock
+        $statsStmt = $pdo->query("
+            SELECT 
+                COUNT(*) AS total_products,
+                0 AS total_stock,
+                (SELECT COUNT(*) FROM orders) AS total_orders,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE status = 'Livrée') AS total_revenue
+            FROM products
         ");
     }
-    $stats = $statsStmt->fetch();
+    $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     // En cas d'erreur, utiliser des valeurs par défaut
     $stats = [

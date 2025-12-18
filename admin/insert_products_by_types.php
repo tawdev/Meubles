@@ -37,6 +37,18 @@ $products = [
     
     // BUREAU - Caisson de rangement
     ['Caisson de bureau 3 tiroirs', 'Caisson de bureau 3 tiroirs – Pratique et mobile', 89.00, 'Bureau', 'Caisson de rangement', 15, 'images/1765373576_Rehaussez l\'organisation de votre maison avec ce….jpeg'],
+
+    // BUREAU - Bureau sur mesure
+    ['Bureau sur mesure premium', 'Bureau sur mesure premium – Finition haut de gamme adaptée à votre espace', 899.00, 'Bureau', 'Bureau sur mesure', 3, 'images/1765286150_study table ideas study motivation study aesthetic study study tips study note study table study har.jpeg'],
+    ['Bureau sur mesure compact', 'Bureau sur mesure compact – Optimisé pour les petits espaces', 749.00, 'Bureau', 'Bureau sur mesure', 4, 'images/1765286150_study table ideas study motivation study aesthetic study study tips study note study table study har.jpeg'],
+
+    // BUREAU - Bureau moderne
+    ['Bureau moderne bois et métal', 'Bureau moderne bois et métal – Design industriel tendance', 329.00, 'Bureau', 'Bureau moderne', 6, 'images/1765372581_Améliorez votre espace de travail avec ce bureau….jpeg'],
+    ['Bureau moderne blanc laqué', 'Bureau moderne blanc laqué – Minimal et lumineux', 299.00, 'Bureau', 'Bureau moderne', 5, 'images/1765372616_Add a bold pop of color and modern style to your….jpeg'],
+
+    // BUREAU - Bureau classique
+    ['Bureau classique en chêne', 'Bureau classique en chêne – Style traditionnel intemporel', 399.00, 'Bureau', 'Bureau classique', 4, 'images/1765286150_study table ideas study motivation study aesthetic study study tips study note study table study har.jpeg'],
+    ['Bureau classique avec tiroirs', 'Bureau classique avec tiroirs – Idéal pour un bureau à domicile', 429.00, 'Bureau', 'Bureau classique', 5, 'images/1765286150_study table ideas study motivation study aesthetic study study tips study note study table study har.jpeg'],
     
     // CHAMBRE - Lit double
     ['Lit double en bois massif', 'Lit double en bois massif – Robuste et élégant', 399.00, 'Chambre', 'Lit double', 5, 'images/Lit double MARIUS 160x200 tissu beige sommier inclus.jpeg'],

@@ -119,6 +119,105 @@ WHERE c.name = 'Bureau' AND tc.name = 'Caisson de rangement'
 LIMIT 1;
 
 -- ============================================
+-- BUREAU - Bureau sur mesure
+-- ============================================
+INSERT INTO products (name, description, price, image, category, category_id, type_category_id, stock) 
+SELECT 
+    'Bureau sur mesure premium',
+    'Bureau sur mesure premium – Finition haut de gamme adaptée à votre espace',
+    899.00,
+    'images/1765286150_study table ideas study motivation study aesthetic study study tips study note study table study har.jpeg',
+    'Bureau',
+    c.id,
+    tc.id,
+    3
+FROM categories c
+INNER JOIN types_categories tc ON c.id = tc.category_id
+WHERE c.name = 'Bureau' AND tc.name = 'Bureau sur mesure'
+LIMIT 1;
+
+INSERT INTO products (name, description, price, image, category, category_id, type_category_id, stock) 
+SELECT 
+    'Bureau sur mesure compact',
+    'Bureau sur mesure compact – Optimisé pour les petits espaces',
+    749.00,
+    'images/1765286150_study table ideas study motivation study aesthetic study study tips study note study table study har.jpeg',
+    'Bureau',
+    c.id,
+    tc.id,
+    4
+FROM categories c
+INNER JOIN types_categories tc ON c.id = tc.category_id
+WHERE c.name = 'Bureau' AND tc.name = 'Bureau sur mesure'
+LIMIT 1;
+
+-- ============================================
+-- BUREAU - Bureau moderne
+-- ============================================
+INSERT INTO products (name, description, price, image, category, category_id, type_category_id, stock) 
+SELECT 
+    'Bureau moderne bois et métal',
+    'Bureau moderne bois et métal – Design industriel tendance',
+    329.00,
+    'images/1765372581_Améliorez votre espace de travail avec ce bureau….jpeg',
+    'Bureau',
+    c.id,
+    tc.id,
+    6
+FROM categories c
+INNER JOIN types_categories tc ON c.id = tc.category_id
+WHERE c.name = 'Bureau' AND tc.name = 'Bureau moderne'
+LIMIT 1;
+
+INSERT INTO products (name, description, price, image, category, category_id, type_category_id, stock) 
+SELECT 
+    'Bureau moderne blanc laqué',
+    'Bureau moderne blanc laqué – Minimal et lumineux',
+    299.00,
+    'images/1765372616_Add a bold pop of color and modern style to your….jpeg',
+    'Bureau',
+    c.id,
+    tc.id,
+    5
+FROM categories c
+INNER JOIN types_categories tc ON c.id = tc.category_id
+WHERE c.name = 'Bureau' AND tc.name = 'Bureau moderne'
+LIMIT 1;
+
+-- ============================================
+-- BUREAU - Bureau classique
+-- ============================================
+INSERT INTO products (name, description, price, image, category, category_id, type_category_id, stock) 
+SELECT 
+    'Bureau classique en chêne',
+    'Bureau classique en chêne – Style traditionnel intemporel',
+    399.00,
+    'images/1765286150_study table ideas study motivation study aesthetic study study tips study note study table study har.jpeg',
+    'Bureau',
+    c.id,
+    tc.id,
+    4
+FROM categories c
+INNER JOIN types_categories tc ON c.id = tc.category_id
+WHERE c.name = 'Bureau' AND tc.name = 'Bureau classique'
+LIMIT 1;
+
+INSERT INTO products (name, description, price, image, category, category_id, type_category_id, stock) 
+SELECT 
+    'Bureau classique avec tiroirs',
+    'Bureau classique avec tiroirs – Idéal pour un bureau à domicile',
+    429.00,
+    'images/1765286150_study table ideas study motivation study aesthetic study study tips study note study table study har.jpeg',
+    'Bureau',
+    c.id,
+    tc.id,
+    5
+FROM categories c
+INNER JOIN types_categories tc ON c.id = tc.category_id
+WHERE c.name = 'Bureau' AND tc.name = 'Bureau classique'
+LIMIT 1;
+
+-- ============================================
 -- CHAMBRE - Lit double
 -- ============================================
 INSERT INTO products (name, description, price, image, category, category_id, type_category_id, stock) 

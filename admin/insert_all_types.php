@@ -29,7 +29,10 @@ $typesByCategory = [
         'Chaise de bureau',
         'Fauteuil de bureau',
         'Étagère de bureau',
-        'Caisson de rangement'
+        'Caisson de rangement',
+        'Bureau sur mesure',
+        'Bureau moderne',
+        'Bureau classique'
     ],
     'Chambre' => [
         'Lit simple',

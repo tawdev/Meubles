@@ -71,11 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button type="submit" class="btn" style="width: 100%;">Se connecter</button>
             </form>
             
-            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-light); font-size: 0.9rem;">
-                <p>Identifiants par défaut :</p>
-                <p><strong>Username:</strong> admin</p>
-                <p><strong>Password:</strong> admin123</p>
-            </div>
+            
         </div>
     </div>
 </body>
