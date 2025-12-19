@@ -50,7 +50,7 @@ $featuredProducts = $stmt->fetchAll();
             <a href="categories.php" class="btn view-all-categories-btn view-all-desktop" style="padding: 0.75rem 1.5rem;">Voir toutes les catégories →</a>
         </div>
         <div class="categories">
-            <?php foreach (array_slice($categoriesList, 0, 5) as $category): ?>
+            <?php foreach (array_slice($categoriesList, 0, 4) as $category): ?>
                 <a href="products.php?category=<?php echo urlencode($category['name']); ?>" class="category-card" style="text-decoration: none; color: inherit;">
                     <div style="font-size: 4rem; margin-bottom: 1rem;"><?php echo htmlspecialchars($category['icon'] ?? '📦'); ?></div>
                     <h3><?php echo htmlspecialchars($category['name']); ?></h3>
