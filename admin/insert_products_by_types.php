@@ -21,6 +21,9 @@ $results = [];
 $errors = [];
 $success = false;
 
+// Charger les produits de chambre sur mesure depuis un fichier séparé
+$chambreSurMesureProducts = require __DIR__ . '/insert_chambre_sur_mesure.php';
+
 // Définir tous les produits par catégorie et type
 $products = [
     // BUREAU - Chaise de bureau
@@ -133,6 +136,9 @@ $products = [
     // SALON - Meuble TV
     ['Meuble TV moderne', 'Meuble TV moderne – Avec rangement', 249.00, 'Salon', 'Meuble TV', 7, 'images/1765373480_Description Design Élégant Le buffet est conçu….jpeg'],
 ];
+
+// Fusionner avec les produits de chambre sur mesure
+$products = array_merge($products, $chambreSurMesureProducts);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'insert') {
     try {

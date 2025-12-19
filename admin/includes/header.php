@@ -99,6 +99,7 @@ require_once __DIR__ . '/../../db.php';
             <li><a href="dashboard.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>">📊 Tableau de bord</a></li>
             <li><a href="add.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'add.php' ? 'active' : ''; ?>">➕ Ajouter un produit</a></li>
             <li><a href="categories.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'categories.php' ? 'active' : ''; ?>">📁 Catégories</a></li>
+            <li><a href="types.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'types.php' ? 'active' : ''; ?>">🏷️ Types (stock/mesure)</a></li>
             <li><a href="types_categories.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'types_categories.php' ? 'active' : ''; ?>">🏷️ Types de catégories</a></li>
             <li><a href="orders.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'orders.php' ? 'active' : ''; ?>">📦 Commandes</a></li>
             <li><a href="contacts.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'contacts.php' ? 'active' : ''; ?>">📧 Messages</a></li>

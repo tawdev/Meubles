@@ -21,6 +21,14 @@
     margin: 3rem 0;
 }
 
+/* Grille catégories - 4 colonnes par ligne */
+.categories {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
 .category-card {
     background: linear-gradient(135deg, var(--bg-white), var(--bg-light));
     padding: 3rem 2rem;
@@ -190,7 +198,18 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+    .categories {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
+    .categories {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
     .categories-grid {
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.5rem;
@@ -202,6 +221,12 @@
     
     .category-card > div:first-child {
         font-size: 4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .categories {
+        grid-template-columns: 1fr;
     }
 }
 

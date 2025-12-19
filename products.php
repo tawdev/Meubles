@@ -2,9 +2,10 @@
 $pageTitle = "Nos Produits";
 require_once 'includes/header.php';
 
-// Récupérer la catégorie et le type depuis l'URL si présents
+// Récupérer la catégorie, le type de catégorie et le type depuis l'URL si présents
 $selectedCategory = $_GET['category'] ?? '';
 $selectedTypeCategory = $_GET['type_category'] ?? '';
+$selectedType = $_GET['type'] ?? '';
 
 // Récupérer les catégories
 try {
@@ -44,28 +45,54 @@ if ($selectedCategoryId) {
     }
 }
 
-// Récupérer tous les produits avec leurs types de catégorie
+// Récupérer tous les types (En stock, Sur mesure)
+$allTypes = [];
+try {
+    $typesStmt = $pdo->query("SELECT * FROM types ORDER BY name");
+    $allTypes = $typesStmt->fetchAll();
+} catch (PDOException $e) {
+    // Si la table types n'existe pas encore
+    $allTypes = [];
+}
+
+// Récupérer tous les produits avec leurs types de catégorie et types
 try {
     $stmt = $pdo->query("
         SELECT p.*, 
                tc.name as type_category_name,
-               tc.id as type_category_id
+               tc.id as type_category_id,
+               t.id as type_id,
+               t.name as type_name,
+               p.max_length,
+               p.max_width
         FROM products p
         LEFT JOIN types_categories tc ON p.type_category_id = tc.id
+        LEFT JOIN types t ON tc.types_id = t.id
         ORDER BY p.id DESC
     ");
     $allProducts = $stmt->fetchAll();
-} catch (PDOException $e) {
-    // Si la jointure échoue, récupérer sans types
-    $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
-    $allProducts = $stmt->fetchAll();
-}
+    } catch (PDOException $e) {
+        // Si la jointure échoue, récupérer sans types
+        try {
+            $stmt = $pdo->query("
+                SELECT p.*, 
+                       tc.name as type_category_name,
+                       tc.id as type_category_id,
+                       p.max_length,
+                       p.max_width
+                FROM products p
+                LEFT JOIN types_categories tc ON p.type_category_id = tc.id
+                ORDER BY p.id DESC
+            ");
+            $allProducts = $stmt->fetchAll();
+        } catch (PDOException $e2) {
+            $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
+            $allProducts = $stmt->fetchAll();
+        }
+    }
 ?>
 
-<section class="hero" style="padding: 4rem 2rem; position: relative;">
-    <a href="index.php" style="position: absolute; top: 2rem; left: 2rem; display: inline-flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; padding: 0.75rem 1.25rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border-radius: 8px; transition: all 0.3s ease; font-size: 0.95rem; font-weight: 500; z-index: 10; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateX(-3px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateX(0)';">
-        ← Retour à l'accueil
-    </a>
+<section class="hero" style="padding: 4rem 2rem;">
     <div class="hero-content">
         <h1>Notre Catalogue Complet</h1>
         <p>Découvrez tous nos meubles et trouvez celui qui correspond à vos besoins</p>
@@ -113,6 +140,20 @@ try {
                     </select>
                 </div>
                 
+                <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 200px; order: 1.5;">
+                    <label for="filter-type" style="display: none;">Type</label>
+                    <select id="filter-type" onchange="onTypeChange()" 
+                            style="flex: 1; padding: 0.875rem 1rem; border: none; border-radius: 8px; font-size: 0.95rem; background: white; color: var(--text-dark); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.08); transition: all 0.3s ease; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'><path fill=\'%23333\' d=\'M6 9L1 4h10z\'/></svg>'); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; width: 100%;">
+                        <option value="all">Tous les types (stock/mesure)</option>
+                        <?php foreach ($allTypes as $type): ?>
+                            <option value="<?php echo $type['id']; ?>" 
+                                    <?php echo ($selectedType && $selectedType == $type['id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($type['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex: 2; min-width: 250px; position: relative; order: 2;">
                     <input type="text" id="search-products" 
                            placeholder="Rechercher un produit..." 
@@ -145,6 +186,8 @@ try {
                          data-category-id="<?php echo $product['category_id'] ?? ''; ?>"
                          data-type-category-id="<?php echo $product['type_category_id'] ?? ''; ?>"
                          data-type-category-name="<?php echo htmlspecialchars($product['type_category_name'] ?? ''); ?>"
+                         data-type-id="<?php echo $product['type_id'] ?? ''; ?>"
+                         data-type-name="<?php echo htmlspecialchars($product['type_name'] ?? ''); ?>"
                          data-price="<?php echo $product['price']; ?>"
                          style="overflow: hidden; position: relative;">
                         <!-- Badge catégorie -->
@@ -183,6 +226,9 @@ try {
                                         data-name="<?php echo htmlspecialchars($product['name']); ?>"
                                         data-price="<?php echo $product['price']; ?>"
                                         data-image="<?php echo htmlspecialchars($product['image']); ?>"
+                                        data-type-name="<?php echo htmlspecialchars($product['type_name'] ?? ''); ?>"
+                                        data-max-length="<?php echo isset($product['max_length']) && $product['max_length'] ? $product['max_length'] : ''; ?>"
+                                        data-max-width="<?php echo isset($product['max_width']) && $product['max_width'] ? $product['max_width'] : ''; ?>"
                                         style="flex: 1; text-align: center; padding: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.9rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
                                         title="Ajouter au panier">
                                     🛒 Ajouter
@@ -210,6 +256,7 @@ try {
 /* Amélioration des filtres */
 #filter-category:focus,
 #filter-type-category:focus,
+#filter-type:focus,
 #search-products:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15), 0 4px 10px rgba(0,0,0,0.1);
@@ -217,7 +264,8 @@ try {
 }
 
 #filter-category:hover,
-#filter-type-category:hover {
+#filter-type-category:hover,
+#filter-type:hover {
     box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
@@ -332,6 +380,10 @@ function resetFilters() {
     if (typeFilter) {
         typeFilter.value = 'all';
     }
+    const typeFilterType = document.getElementById('filter-type');
+    if (typeFilterType) {
+        typeFilterType.value = 'all';
+    }
     const typeContainer = document.getElementById('type-category-filter-container');
     if (typeContainer) {
         typeContainer.classList.add('hidden');
@@ -344,6 +396,7 @@ function resetFilters() {
 function loadTypesByCategory(categoryId) {
     const typeSelect = document.getElementById('filter-type-category');
     const typeContainer = document.getElementById('type-category-filter-container');
+    const typeFilter = document.getElementById('filter-type');
     
     if (!typeSelect || !typeContainer) {
         return;
@@ -359,6 +412,9 @@ function loadTypesByCategory(categoryId) {
         return;
     }
     
+    // Récupérer le type sélectionné (En stock / Sur mesure)
+    const selectedTypeId = typeFilter ? typeFilter.value : 'all';
+    
     // Afficher le conteneur immédiatement
     typeContainer.classList.remove('hidden');
     typeContainer.style.display = 'flex';
@@ -372,8 +428,11 @@ function loadTypesByCategory(categoryId) {
     typeSelect.disabled = true;
     typeSelect.innerHTML = '<option value="all">Chargement...</option>';
     
-    // Charger les types via AJAX
-    const apiUrl = `admin/get_types_by_category.php?category_id=${categoryId}`;
+    // Charger les types via AJAX avec le filtre de type si sélectionné
+    let apiUrl = `admin/get_types_by_category.php?category_id=${categoryId}`;
+    if (selectedTypeId && selectedTypeId !== 'all' && selectedTypeId !== '') {
+        apiUrl += `&type_id=${selectedTypeId}`;
+    }
     
     fetch(apiUrl)
         .then(response => {
@@ -466,16 +525,38 @@ function onCategoryChange() {
     
     const categoryId = categorySelect.value;
     
-    // Réinitialiser le filtre de type
+    // Réinitialiser le filtre de type de catégorie
     const typeFilter = document.getElementById('filter-type-category');
     if (typeFilter) {
         typeFilter.value = 'all';
     }
     
-    // Charger les types pour cette catégorie
+    // Charger les types pour cette catégorie (en tenant compte du type sélectionné)
     loadTypesByCategory(categoryId);
     
     // Appliquer le filtre après un court délai pour laisser le temps de charger les types
+    setTimeout(function() {
+        filterProducts();
+    }, 300);
+}
+
+// Gérer le changement de type (En stock / Sur mesure)
+function onTypeChange() {
+    const categorySelect = document.getElementById('filter-category');
+    const categoryId = categorySelect ? categorySelect.value : 'all';
+    
+    // Réinitialiser le filtre de type de catégorie
+    const typeCategoryFilter = document.getElementById('filter-type-category');
+    if (typeCategoryFilter) {
+        typeCategoryFilter.value = 'all';
+    }
+    
+    // Recharger les types de catégorie en fonction du type sélectionné
+    if (categoryId && categoryId !== 'all' && categoryId !== '') {
+        loadTypesByCategory(categoryId);
+    }
+    
+    // Appliquer le filtre
     setTimeout(function() {
         filterProducts();
     }, 300);
@@ -531,11 +612,12 @@ document.addEventListener('DOMContentLoaded', function() {
             typeContainer.style.display = 'flex';
         }
         setTimeout(function() {
+            // Charger les types en tenant compte du type sélectionné (si présent)
             loadTypesByCategory(<?php echo $selectedCategoryId; ?>);
         }, 100);
     <?php endif; ?>
     
-    <?php if ($selectedCategory || $selectedTypeCategory): ?>
+    <?php if ($selectedCategory || $selectedTypeCategory || $selectedType): ?>
         // Appliquer le filtre si présent dans l'URL
         setTimeout(function() {
             filterProducts();
@@ -579,10 +661,12 @@ window.addEventListener('load', function() {
         const productCards = document.querySelectorAll('.product-card');
         
         const typeCategory = document.getElementById('filter-type-category')?.value || 'all';
+        const type = document.getElementById('filter-type')?.value || 'all';
         
         console.log('🔍 Filtrage des produits:', {
             category,
             typeCategory,
+            type,
             searchTerm,
             totalProducts: productCards.length
         });
@@ -595,12 +679,14 @@ window.addEventListener('load', function() {
         let visibleCount = 0;
         let hiddenByCategory = 0;
         let hiddenByType = 0;
+        let hiddenByTypeCategory = 0;
         let hiddenBySearch = 0;
         
         productCards.forEach((card, index) => {
             const productCategory = card.dataset.category || '';
             const productCategoryId = card.dataset.categoryId || '';
             const productTypeCategoryId = card.dataset.typeCategoryId || '';
+            const productTypeId = card.dataset.typeId || '';
             const productName = card.querySelector('.product-name')?.textContent || '';
             
             let show = true;
@@ -663,11 +749,24 @@ window.addEventListener('load', function() {
             if (show && typeCategory !== 'all' && typeCategory !== '' && typeCategory !== 'none') {
                 if (productTypeCategoryId && productTypeCategoryId !== typeCategory) {
                     show = false;
-                    reason = 'type mismatch: ' + productTypeCategoryId + ' !== ' + typeCategory;
-                    hiddenByType++;
+                    reason = 'type category mismatch: ' + productTypeCategoryId + ' !== ' + typeCategory;
+                    hiddenByTypeCategory++;
                 } else if (!productTypeCategoryId && typeCategory !== 'all') {
                     show = false;
                     reason = 'no type_category_id';
+                    hiddenByTypeCategory++;
+                }
+            }
+
+            // Filtre par type (En stock, Sur mesure)
+            if (show && type !== 'all' && type !== '') {
+                if (productTypeId && productTypeId !== type) {
+                    show = false;
+                    reason = 'type mismatch: ' + productTypeId + ' !== ' + type;
+                    hiddenByType++;
+                } else if (!productTypeId && type !== 'all') {
+                    show = false;
+                    reason = 'no type_id';
                     hiddenByType++;
                 }
             }
@@ -692,8 +791,10 @@ window.addEventListener('load', function() {
                     productCategory,
                     productCategoryId,
                     productTypeCategoryId,
+                    productTypeId,
                     category,
-                    typeCategory
+                    typeCategory,
+                    type
                 });
             }
         });
@@ -702,6 +803,7 @@ window.addEventListener('load', function() {
             visibles: visibleCount,
             total: productCards.length,
             cachésParCatégorie: hiddenByCategory,
+            cachésParTypeCatégorie: hiddenByTypeCategory,
             cachésParType: hiddenByType,
             cachésParRecherche: hiddenBySearch
         });
@@ -722,6 +824,415 @@ window.addEventListener('load', function() {
         });
         updateResultsCount();
     }
+});
+
+// Gestion de la modal de dimensions pour produits sur mesure
+document.addEventListener('DOMContentLoaded', function() {
+    // Créer la modal de dimensions
+    const modalHTML = `
+        <div id="dimensions-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; position: relative; border-top: 4px solid #8B4513; border-bottom: 4px solid #8B4513;">
+                <button id="close-dimensions-modal" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; padding: 0.5rem; line-height: 1;">×</button>
+                <h2 style="color: #8B4513; font-weight: bold; margin-bottom: 1rem; font-size: 1.5rem;">Spécifier les dimensions</h2>
+                <p id="dimensions-instruction" style="color: #666; font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;">
+                    Veuillez entrer les dimensions de votre tapis pour calculer le prix exact.
+                </p>
+                <p id="max-dimensions-info" style="color: #8B4513; font-weight: 600; margin-bottom: 1rem; font-size: 1rem;">
+                    Dimensions maximales pour ce modèle : <span id="max-dimensions-text">-</span>
+                </p>
+                <div id="calculated-price" style="background: #e8f5e9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #2e7d32; font-weight: 600;">Prix calculé :</span>
+                        <span id="calculated-price-value" style="color: #8B4513; font-size: 1.5rem; font-weight: bold;">0.00 DH</span>
+                    </div>
+                    <small style="color: #666; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
+                        Prix de base : <span id="base-price-text">0.00</span> DH/m² × Surface : <span id="surface-text">0</span> m²
+                    </small>
+                </div>
+                <form id="dimensions-form">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label for="dimension-length" style="display: block; margin-bottom: 0.5rem; color: #333; font-weight: 600;">
+                            Longueur (cm) *
+                        </label>
+                        <input type="number" id="dimension-length" name="length" step="0.01" min="0" required
+                               style="width: 100%; padding: 0.875rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: white;"
+                               placeholder="0"
+                               oninput="calculatePrice()">
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label for="dimension-width" style="display: block; margin-bottom: 0.5rem; color: #333; font-weight: 600;">
+                            Largeur (cm) *
+                        </label>
+                        <input type="number" id="dimension-width" name="width" step="0.01" min="0" required
+                               style="width: 100%; padding: 0.875rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: white;"
+                               placeholder="0"
+                               oninput="calculatePrice()">
+                    </div>
+                    <div id="dimensions-error" style="color: #e74c3c; margin-bottom: 1rem; display: none; font-size: 0.9rem;"></div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button type="button" id="cancel-dimensions" 
+                                style="padding: 0.875rem 2rem; border: none; border-radius: 8px; background: #95a5a6; color: white; cursor: pointer; font-weight: 600; font-size: 1rem;">
+                            Annuler
+                        </button>
+                        <button type="submit" id="add-to-cart-with-dimensions"
+                                style="padding: 0.875rem 2rem; border: none; border-radius: 8px; background: #8B4513; color: white; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.3s ease;"
+                                onmouseover="this.style.background='#6B3410'; this.style.transform='scale(1.05)';"
+                                onmouseout="this.style.background='#8B4513'; this.style.transform='scale(1)';">
+                            Ajouter au panier
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    // Ajouter la modal au body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    const modal = document.getElementById('dimensions-modal');
+    const closeBtn = document.getElementById('close-dimensions-modal');
+    const cancelBtn = document.getElementById('cancel-dimensions');
+    const form = document.getElementById('dimensions-form');
+    const errorDiv = document.getElementById('dimensions-error');
+    let currentProductData = null;
+    
+    // Fonction pour ouvrir la modal
+    function openDimensionsModal(productData) {
+        currentProductData = productData;
+        const maxLength = parseFloat(productData.maxLength) || 0;
+        const maxWidth = parseFloat(productData.maxWidth) || 0;
+        
+        // Mettre à jour les informations de la modal
+        if (maxLength > 0 && maxWidth > 0) {
+            document.getElementById('max-dimensions-text').textContent = `${maxWidth} cm × ${maxLength} cm`;
+        } else {
+            document.getElementById('max-dimensions-text').textContent = 'Non spécifié';
+        }
+        
+        // Réinitialiser le formulaire
+        document.getElementById('dimension-length').value = '';
+        document.getElementById('dimension-width').value = '';
+        errorDiv.style.display = 'none';
+        
+        // Afficher le prix de base
+        const basePrice = parseFloat(productData.price) || 0;
+        document.getElementById('base-price-text').textContent = basePrice.toFixed(2);
+        
+        // Masquer le prix calculé initialement
+        document.getElementById('calculated-price').style.display = 'none';
+        
+        // Afficher la modal
+        modal.style.display = 'flex';
+    }
+    
+    // Fonction pour calculer le prix en temps réel
+    function calculatePrice() {
+        try {
+            if (!currentProductData) {
+                return;
+            }
+            
+            const lengthInput = document.getElementById('dimension-length');
+            const widthInput = document.getElementById('dimension-width');
+            
+            if (!lengthInput || !widthInput) {
+                return;
+            }
+            
+            const length = parseFloat(lengthInput.value) || 0;
+            const width = parseFloat(widthInput.value) || 0;
+            const basePrice = parseFloat(currentProductData.price) || 0;
+            const calculatedPriceDiv = document.getElementById('calculated-price');
+            const calculatedPriceValue = document.getElementById('calculated-price-value');
+            const surfaceText = document.getElementById('surface-text');
+            
+            if (!calculatedPriceDiv || !calculatedPriceValue || !surfaceText) {
+                return;
+            }
+            
+            if (length > 0 && width > 0 && basePrice > 0) {
+                // Calculer la surface en m² (cm² / 10000)
+                const surface = (length * width) / 10000;
+                // Calculer le prix total = prix par m² × surface
+                const calculatedPrice = basePrice * surface;
+                
+                // Vérifier que les calculs sont valides
+                if (!isNaN(surface) && !isNaN(calculatedPrice) && calculatedPrice > 0) {
+                    // Afficher le prix calculé
+                    calculatedPriceValue.textContent = calculatedPrice.toFixed(2) + ' DH';
+                    surfaceText.textContent = surface.toFixed(2);
+                    calculatedPriceDiv.style.display = 'block';
+                } else {
+                    calculatedPriceDiv.style.display = 'none';
+                }
+            } else {
+                calculatedPriceDiv.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Erreur dans calculatePrice:', error);
+        }
+    }
+    
+    // Fonction pour fermer la modal
+    function closeDimensionsModal() {
+        modal.style.display = 'none';
+        currentProductData = null;
+        form.reset();
+        errorDiv.style.display = 'none';
+    }
+    
+    // Événements pour fermer la modal
+    closeBtn.addEventListener('click', closeDimensionsModal);
+    cancelBtn.addEventListener('click', closeDimensionsModal);
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeDimensionsModal();
+        }
+    });
+    
+    // Fonction pour valider et ajouter au panier
+    function addToCartWithDimensions() {
+        try {
+            if (!currentProductData) {
+                console.error('Aucune donnée produit disponible');
+                errorDiv.textContent = 'Erreur: Aucune donnée produit disponible.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            const lengthInput = document.getElementById('dimension-length');
+            const widthInput = document.getElementById('dimension-width');
+            
+            if (!lengthInput || !widthInput) {
+                console.error('Champs de dimensions non trouvés');
+                errorDiv.textContent = 'Erreur: Champs de dimensions non trouvés.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            const length = parseFloat(lengthInput.value);
+            const width = parseFloat(widthInput.value);
+            const maxLength = parseFloat(currentProductData.maxLength) || 0;
+            const maxWidth = parseFloat(currentProductData.maxWidth) || 0;
+            
+            // Validation
+            if (isNaN(length) || length <= 0) {
+                errorDiv.textContent = 'Veuillez entrer une longueur valide (supérieure à 0).';
+                errorDiv.style.display = 'block';
+                lengthInput.focus();
+                return;
+            }
+            
+            if (isNaN(width) || width <= 0) {
+                errorDiv.textContent = 'Veuillez entrer une largeur valide (supérieure à 0).';
+                errorDiv.style.display = 'block';
+                widthInput.focus();
+                return;
+            }
+            
+            if (maxLength > 0 && length > maxLength) {
+                errorDiv.textContent = `La longueur ne peut pas dépasser ${maxLength} cm.`;
+                errorDiv.style.display = 'block';
+                lengthInput.focus();
+                return;
+            }
+            
+            if (maxWidth > 0 && width > maxWidth) {
+                errorDiv.textContent = `La largeur ne peut pas dépasser ${maxWidth} cm.`;
+                errorDiv.style.display = 'block';
+                widthInput.focus();
+                return;
+            }
+            
+            // Calculer le prix basé sur les dimensions
+            const basePrice = parseFloat(currentProductData.price) || 0;
+            
+            if (isNaN(basePrice) || basePrice <= 0) {
+                console.error('Prix de base invalide:', currentProductData.price);
+                errorDiv.textContent = 'Erreur: Prix de base invalide.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            const surface = (length * width) / 10000; // Surface en m²
+            const calculatedPrice = basePrice * surface;
+            
+            // Vérifier que le prix calculé est valide
+            if (isNaN(calculatedPrice) || calculatedPrice <= 0) {
+                console.error('Prix calculé invalide:', calculatedPrice);
+                errorDiv.textContent = 'Erreur: Impossible de calculer le prix. Veuillez vérifier les dimensions.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Vérifier que cartManager est disponible
+            const manager = window.cartManager;
+            if (!manager || typeof manager.addToCart !== 'function') {
+                console.error('cartManager n\'est pas disponible ou addToCart n\'est pas une fonction');
+                errorDiv.textContent = 'Erreur: Impossible d\'ajouter au panier. Veuillez rafraîchir la page.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Valider les données du produit
+            const productId = String(currentProductData.id || '').trim();
+            const productName = String(currentProductData.name || '').trim();
+            const productImage = String(currentProductData.image || '').trim();
+            
+            if (!productId || !productName) {
+                console.error('Données produit invalides:', currentProductData);
+                errorDiv.textContent = 'Erreur: Données produit invalides.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Ajouter au panier avec les dimensions et le prix calculé
+            manager.addToCart(
+                productId,
+                productName,
+                calculatedPrice, // Utiliser le prix calculé au lieu du prix de base
+                productImage,
+                1,
+                {
+                    length: length,
+                    width: width,
+                    maxLength: maxLength,
+                    maxWidth: maxWidth,
+                    basePrice: basePrice, // Garder le prix de base pour référence
+                    surface: surface
+                }
+            );
+            
+            // Fermer la modal après succès
+            closeDimensionsModal();
+            
+        } catch (error) {
+            console.error('Erreur dans addToCartWithDimensions:', error);
+            errorDiv.textContent = 'Erreur: ' + (error.message || 'Une erreur est survenue lors de l\'ajout au panier.');
+            errorDiv.style.display = 'block';
+        }
+    }
+    
+    // Gestion de la soumission du formulaire
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        addToCartWithDimensions();
+        return false;
+    });
+    
+    // Ajouter aussi un gestionnaire direct sur le bouton pour plus de fiabilité
+    const addToCartBtn = document.getElementById('add-to-cart-with-dimensions');
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            addToCartWithDimensions();
+            return false;
+        });
+    }
+    
+    // Intercepter les clics sur les boutons "Ajouter au panier"
+    // Utiliser une fonction pour éviter les doublons d'event listeners
+    function initProductsAddToCart() {
+        document.querySelectorAll('.btn-add-cart').forEach(btn => {
+            // Vérifier si l'event listener existe déjà
+            if (btn.hasAttribute('data-listener-attached')) {
+                return;
+            }
+            btn.setAttribute('data-listener-attached', 'true');
+            
+            // Utiliser capture phase pour s'exécuter avant script.js
+            btn.addEventListener('click', function(e) {
+                // Pour les produits sur mesure, prendre le contrôle complet
+                const typeName = String(this.dataset.typeName || '').toLowerCase();
+                const maxLength = String(this.dataset.maxLength || '').trim();
+                const maxWidth = String(this.dataset.maxWidth || '').trim();
+                
+                if (typeName.includes('sur mesure') && (maxLength || maxWidth)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation(); // Empêcher les autres listeners
+                    
+                    try {
+                        if (typeof openDimensionsModal === 'function') {
+                            openDimensionsModal({
+                                id: this.dataset.id,
+                                name: this.dataset.name,
+                                price: this.dataset.price,
+                                image: this.dataset.image,
+                                maxLength: maxLength,
+                                maxWidth: maxWidth
+                            });
+                        } else {
+                            console.error('openDimensionsModal n\'est pas disponible');
+                            alert('Erreur: Fonction de modal non disponible.');
+                        }
+                    } catch (error) {
+                        console.error('Erreur lors de l\'ouverture de la modal:', error);
+                        alert('Erreur: ' + (error.message || 'Impossible d\'ouvrir la modal.'));
+                    }
+                    
+                    return false;
+                }
+            }, true); // Utiliser capture phase
+            
+            // Pour les produits normaux, ajouter aussi un listener normal
+            btn.addEventListener('click', function(e) {
+                const typeName = String(this.dataset.typeName || '').toLowerCase();
+                const maxLength = String(this.dataset.maxLength || '').trim();
+                const maxWidth = String(this.dataset.maxWidth || '').trim();
+                
+                // Si c'est un produit sur mesure, ne rien faire (déjà géré par le listener en capture)
+                if (typeName.includes('sur mesure') && (maxLength || maxWidth)) {
+                    return;
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                try {
+                    // Ajouter directement au panier
+                    const manager = window.cartManager;
+                    if (manager && typeof manager.addToCart === 'function') {
+                        const productId = String(this.dataset.id || '').trim();
+                        const productName = String(this.dataset.name || '').trim();
+                        const productPrice = String(this.dataset.price || '0').trim();
+                        const productImage = String(this.dataset.image || '').trim();
+                        
+                        if (!productId || !productName || !productPrice) {
+                            throw new Error('Données produit manquantes');
+                        }
+                        
+                        manager.addToCart(productId, productName, productPrice, productImage);
+                    } else {
+                        console.error('cartManager n\'est pas disponible');
+                        alert('Erreur: Impossible d\'ajouter au panier. Veuillez rafraîchir la page.');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de l\'ajout au panier:', error);
+                    alert('Erreur: ' + (error.message || 'Impossible d\'ajouter au panier.'));
+                }
+                
+                return false;
+            });
+        });
+    }
+    
+    // Initialiser au chargement - AVANT script.js
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initProductsAddToCart);
+    } else {
+        initProductsAddToCart();
+    }
+    
+    // Réinitialiser après un court délai pour les éléments chargés dynamiquement
+    setTimeout(initProductsAddToCart, 100);
+    
+    // Exposer les fonctions globalement pour les event handlers inline
+    window.calculatePrice = calculatePrice;
+    window.openDimensionsModal = openDimensionsModal;
+    window.closeDimensionsModal = closeDimensionsModal;
 });
 </script>
 

@@ -12,13 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'add':
                 $name = trim($_POST['name'] ?? '');
                 $categoryId = intval($_POST['category_id'] ?? 0);
+                $typeId = !empty($_POST['type_id']) ? intval($_POST['type_id']) : null;
                 
                 if (empty($name) || $categoryId <= 0) {
                     $error = 'Le nom et la catégorie sont obligatoires.';
                 } else {
                     try {
-                        $stmt = $pdo->prepare("INSERT INTO types_categories (name, category_id) VALUES (?, ?)");
-                        $stmt->execute([$name, $categoryId]);
+                        $stmt = $pdo->prepare("INSERT INTO types_categories (name, category_id, types_id) VALUES (?, ?, ?)");
+                        $stmt->execute([$name, $categoryId, $typeId]);
                         $success = true;
                         $_POST = [];
                     } catch (PDOException $e) {
@@ -31,13 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id = intval($_POST['id'] ?? 0);
                 $name = trim($_POST['name'] ?? '');
                 $categoryId = intval($_POST['category_id'] ?? 0);
+                $typeId = !empty($_POST['type_id']) ? intval($_POST['type_id']) : null;
                 
                 if (empty($name) || $categoryId <= 0) {
                     $error = 'Le nom et la catégorie sont obligatoires.';
                 } else {
                     try {
-                        $stmt = $pdo->prepare("UPDATE types_categories SET name = ?, category_id = ? WHERE id = ?");
-                        $stmt->execute([$name, $categoryId, $id]);
+                        $stmt = $pdo->prepare("UPDATE types_categories SET name = ?, category_id = ?, types_id = ? WHERE id = ?");
+                        $stmt->execute([$name, $categoryId, $typeId, $id]);
                         $success = true;
                     } catch (PDOException $e) {
                         $error = 'Erreur lors de la modification : ' . $e->getMessage();
@@ -77,15 +79,60 @@ try {
     $categoriesList = [];
 }
 
-// Récupérer tous les types de catégories avec leurs catégories
+// Récupérer tous les types (En stock, Sur mesure)
+$allTypes = [];
 try {
-    $stmt = $pdo->query("
-        SELECT tc.*, c.name as category_name, c.icon as category_icon,
-               (SELECT COUNT(*) FROM products WHERE type_category_id = tc.id) as product_count
-        FROM types_categories tc
-        LEFT JOIN categories c ON tc.category_id = c.id
-        ORDER BY c.name, tc.name
-    ");
+    $typesStmt = $pdo->query("SELECT * FROM types ORDER BY name");
+    $allTypes = $typesStmt->fetchAll();
+} catch (PDOException $e) {
+    // Si la table types n'existe pas encore
+    $allTypes = [];
+}
+
+// Récupérer les filtres depuis l'URL
+$filterCategory = $_GET['filter_category'] ?? '';
+$filterType = $_GET['filter_type'] ?? '';
+$searchTerm = $_GET['search'] ?? '';
+
+// Construire la requête avec filtres
+$query = "
+    SELECT tc.*, c.name as category_name, c.icon as category_icon,
+           t.name as type_name, t.id as type_id,
+           (SELECT COUNT(*) FROM products WHERE type_category_id = tc.id) as product_count
+    FROM types_categories tc
+    LEFT JOIN categories c ON tc.category_id = c.id
+    LEFT JOIN types t ON tc.types_id = t.id
+    WHERE 1=1
+";
+
+$params = [];
+
+if (!empty($filterCategory)) {
+    $query .= " AND tc.category_id = ?";
+    $params[] = $filterCategory;
+}
+
+if (!empty($filterType)) {
+    $query .= " AND tc.types_id = ?";
+    $params[] = $filterType;
+}
+
+if (!empty($searchTerm)) {
+    $query .= " AND (tc.name LIKE ? OR c.name LIKE ?)";
+    $searchParam = '%' . $searchTerm . '%';
+    $params[] = $searchParam;
+    $params[] = $searchParam;
+}
+
+$query .= " ORDER BY c.name, tc.name";
+
+try {
+    if (!empty($params)) {
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+    } else {
+        $stmt = $pdo->query($query);
+    }
     $typesCategories = $stmt->fetchAll();
 } catch (PDOException $e) {
     $typesCategories = [];
@@ -117,9 +164,6 @@ if (isset($_GET['edit'])) {
         <h1>Gestion des types de catégories</h1>
         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <button onclick="toggleAddForm()" class="btn" id="toggle-btn">➕ Ajouter un type</button>
-            <a href="insert_all_types.php" class="btn" style="background: var(--secondary-color); text-decoration: none;">
-                🚀 Insérer tous les types
-            </a>
         </div>
     </div>
 
@@ -161,6 +205,20 @@ if (isset($_GET['edit'])) {
                 </div>
                 
                 <div class="form-group">
+                    <label for="type_id">Type (stock/mesure)</label>
+                    <select id="type_id" name="type_id">
+                        <option value="">Sélectionner un type (optionnel)</option>
+                        <?php foreach ($allTypes as $type): ?>
+                            <option value="<?php echo $type['id']; ?>" 
+                                    <?php echo ($editType && isset($editType['types_id']) && $editType['types_id'] == $type['id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($type['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small style="color: var(--text-light);">Sélectionnez si ce type de catégorie est "En stock" ou "Sur mesure"</small>
+                </div>
+                
+                <div class="form-group">
                     <label for="name">Nom du type *</label>
                     <input type="text" id="name" name="name" required 
                            placeholder="Ex: Canapé, Table basse, Lit..."
@@ -179,13 +237,71 @@ if (isset($_GET['edit'])) {
     </div>
 
     <!-- Liste des types de catégories -->
-    <h2 style="margin-bottom: 1rem;">Liste des types de catégories</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 style="margin-bottom: 0;">Liste des types de catégories</h2>
+        <div style="background: var(--bg-light); padding: 0.75rem 1.5rem; border-radius: 25px; color: var(--primary-color); font-weight: 600; font-size: 1rem;">
+            <?php echo count($typesCategories); ?> type(s) trouvé(s)
+        </div>
+    </div>
+    
+    <!-- Filtres -->
+    <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid rgba(0,0,0,0.05);">
+        <form method="GET" action="types_categories.php" id="filter-form" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <!-- Préserver le paramètre edit si présent -->
+            <?php if (isset($_GET['edit'])): ?>
+                <input type="hidden" name="edit" value="<?php echo htmlspecialchars($_GET['edit']); ?>">
+            <?php endif; ?>
+            
+            <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 200px;">
+                <select name="filter_category" id="filter-category-list" 
+                        style="flex: 1; padding: 0.875rem 1rem; border: none; border-radius: 8px; font-size: 0.95rem; background: white; color: var(--text-dark); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.08);">
+                    <option value="">Toutes les catégories</option>
+                    <?php foreach ($categoriesList as $cat): ?>
+                        <option value="<?php echo $cat['id']; ?>" 
+                                <?php echo ($filterCategory == $cat['id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($cat['icon'] ?? ''); ?> <?php echo htmlspecialchars($cat['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 200px;">
+                <select name="filter_type" id="filter-type-list" 
+                        style="flex: 1; padding: 0.875rem 1rem; border: none; border-radius: 8px; font-size: 0.95rem; background: white; color: var(--text-dark); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.08);">
+                    <option value="">Tous les types (stock/mesure)</option>
+                    <?php foreach ($allTypes as $type): ?>
+                        <option value="<?php echo $type['id']; ?>" 
+                                <?php echo ($filterType == $type['id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($type['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 2; min-width: 250px; position: relative;">
+                <input type="text" name="search" 
+                       placeholder="Rechercher un type de catégorie..." 
+                       value="<?php echo htmlspecialchars($searchTerm); ?>"
+                       style="flex: 1; padding: 0.875rem 1rem 0.875rem 2.75rem; border: none; border-radius: 8px; font-size: 0.95rem; background: white; color: var(--text-dark); box-shadow: 0 2px 5px rgba(0,0,0,0.08);">
+                <span style="position: absolute; left: 1rem; color: var(--text-light); font-size: 1.1rem;">🔍</span>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="types_categories.php<?php echo isset($_GET['edit']) ? '?edit=' . htmlspecialchars($_GET['edit']) : ''; ?>" 
+                   style="padding: 0.875rem 1.5rem; border: none; border-radius: 8px; font-size: 0.95rem; background: var(--text-light); color: white; cursor: pointer; font-weight: 600; text-decoration: none; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block; text-align: center;">
+                    🔄 Réinitialiser
+                </a>
+            </div>
+        </form>
+    </div>
+    
     <div style="overflow-x: auto;">
         <table class="admin-table">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Catégorie</th>
+                    <th>Type (stock/mesure)</th>
                     <th>Nom du type</th>
                     <th>Produits</th>
                     <th>Créé le</th>
@@ -195,8 +311,10 @@ if (isset($_GET['edit'])) {
             <tbody>
                 <?php if (empty($typesCategories)): ?>
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 2rem;">
-                            <?php if (empty($categoriesList)): ?>
+                        <td colspan="7" style="text-align: center; padding: 2rem;">
+                            <?php if (!empty($filterCategory) || !empty($filterType) || !empty($searchTerm)): ?>
+                                Aucun type de catégorie trouvé avec ces filtres. <a href="types_categories.php" style="color: var(--primary-color);">Réinitialiser les filtres</a>
+                            <?php elseif (empty($categoriesList)): ?>
                                 Aucune catégorie trouvée. Veuillez d'abord créer des catégories.
                             <?php else: ?>
                                 Aucun type de catégorie trouvé. Cliquez sur "Ajouter un type" pour en créer un.
@@ -210,6 +328,15 @@ if (isset($_GET['edit'])) {
                         <td>
                             <span style="font-size: 1.2rem;"><?php echo htmlspecialchars($type['category_icon'] ?? ''); ?></span>
                             <strong><?php echo htmlspecialchars($type['category_name'] ?? 'N/A'); ?></strong>
+                        </td>
+                        <td>
+                            <?php if (!empty($type['type_name'])): ?>
+                                <span style="background: var(--primary-color); color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+                                    <?php echo htmlspecialchars($type['type_name']); ?>
+                                </span>
+                            <?php else: ?>
+                                <span style="color: var(--text-light);">-</span>
+                            <?php endif; ?>
                         </td>
                         <td><strong><?php echo htmlspecialchars($type['name']); ?></strong></td>
                         <td><?php echo $type['product_count']; ?> produit(s)</td>
@@ -279,6 +406,35 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleBtn.style.background = 'var(--text-light)';
     }
     <?php endif; ?>
+    
+    // Filtrage automatique lors du changement des filtres
+    const filterForm = document.getElementById('filter-form');
+    if (filterForm) {
+        const filterInputs = filterForm.querySelectorAll('select[name], input[name="search"]');
+        filterInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                // Délai pour éviter trop de requêtes si l'utilisateur tape rapidement
+                if (input.name === 'search') {
+                    clearTimeout(window.searchTimeout);
+                    window.searchTimeout = setTimeout(function() {
+                        filterForm.submit();
+                    }, 500);
+                } else {
+                    filterForm.submit();
+                }
+            });
+            
+            // Pour le champ de recherche, aussi écouter l'événement input
+            if (input.name === 'search') {
+                input.addEventListener('input', function() {
+                    clearTimeout(window.searchTimeout);
+                    window.searchTimeout = setTimeout(function() {
+                        filterForm.submit();
+                    }, 500);
+                });
+            }
+        });
+    }
 });
 </script>
 
