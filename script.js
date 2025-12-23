@@ -604,6 +604,33 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Réinitialiser après un délai pour les éléments chargés dynamiquement
     setTimeout(initAddToCartButtons, 500);
+
+    // ===== SLIDERS ACCUEIL (catégories / types / produits) =====
+    (function initHomeSliders() {
+        const sliders = document.querySelectorAll('.home-categories-slider');
+        if (!sliders.length) return;
+
+        sliders.forEach(slider => {
+            const track = slider.querySelector('.home-categories-track');
+            const prevBtn = slider.querySelector('.home-categories-btn.prev');
+            const nextBtn = slider.querySelector('.home-categories-btn.next');
+            if (!track || !prevBtn || !nextBtn) return;
+
+            const firstCard = track.querySelector('.home-category-card');
+            if (!firstCard) return;
+
+            const gap = 24; // écart approximatif بين les cartes
+            const cardWidth = firstCard.getBoundingClientRect().width + gap;
+
+            prevBtn.addEventListener('click', function() {
+                track.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+            });
+
+            nextBtn.addEventListener('click', function() {
+                track.scrollBy({ left: cardWidth, behavior: 'smooth' });
+            });
+        });
+    })();
 });
 
 // Ajouter les styles d'animation pour les notifications

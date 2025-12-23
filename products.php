@@ -1,11 +1,38 @@
 <?php
+// Configuration SEO pour la page produits
+$siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
 $pageTitle = "Nos Produits";
+$pageMetaDescription = "Parcourez notre catalogue complet de meubles de qualité. Trouvez le meuble parfait pour chaque pièce de votre maison. Large sélection de meubles pour salon, chambre, salle à manger, bureau et décoration. Prix compétitifs, livraison rapide.";
+$pageKeywords = "meubles, catalogue meubles, mobilier intérieur, meubles salon, meubles chambre, meubles salle à manger, meubles bureau, achat meubles, frachdark";
+$pageImage = $siteUrl . '/images/logo.jpg';
+
 require_once 'includes/header.php';
 
 // Récupérer la catégorie, le type de catégorie et le type depuis l'URL si présents
 $selectedCategory = $_GET['category'] ?? '';
 $selectedTypeCategory = $_GET['type_category'] ?? '';
 $selectedType = $_GET['type'] ?? '';
+
+// Si un type_category est fourni, récupérer sa catégorie et son type associés
+$selectedCategoryIdFromType = null;
+if (!empty($selectedTypeCategory)) {
+    try {
+        $tcStmt = $pdo->prepare("SELECT category_id, types_id FROM types_categories WHERE id = ?");
+        $tcStmt->execute([(int)$selectedTypeCategory]);
+        $tcData = $tcStmt->fetch();
+
+        if ($tcData) {
+            $selectedCategoryIdFromType = $tcData['category_id'] ?? null;
+            // Si aucun type explicite dans l'URL, utiliser le type lié au type_category
+            if (empty($selectedType) && !empty($tcData['types_id'])) {
+                $selectedType = (string)$tcData['types_id'];
+            }
+        }
+    } catch (PDOException $e) {
+        // En cas d'erreur, on ignore et on continue avec les paramètres fournis
+        $selectedCategoryIdFromType = null;
+    }
+}
 
 // Récupérer les catégories
 try {
@@ -14,11 +41,11 @@ try {
 } catch (PDOException $e) {
     // Si la table categories n'existe pas, utiliser les catégories par défaut
     $categoriesList = [
-        ['id' => 1, 'name' => 'Salon', 'icon' => '🛋️'],
-        ['id' => 2, 'name' => 'Chambre', 'icon' => '🛏️'],
-        ['id' => 3, 'name' => 'Salle à manger', 'icon' => '🍽️'],
-        ['id' => 4, 'name' => 'Bureau', 'icon' => '💼'],
-        ['id' => 5, 'name' => 'Décoration', 'icon' => '🖼️']
+        ['id' => 1, 'name' => 'Salon', 'image' => ''],
+        ['id' => 2, 'name' => 'Chambre', 'image' => ''],
+        ['id' => 3, 'name' => 'Salle à manger', 'image' => ''],
+        ['id' => 4, 'name' => 'Bureau', 'image' => ''],
+        ['id' => 5, 'name' => 'Décoration', 'image' => '']
     ];
 }
 
@@ -31,6 +58,11 @@ if ($selectedCategory) {
             break;
         }
     }
+}
+
+// Si la catégorie n'est pas trouvée par son nom mais qu'on l'a obtenue via type_category, l'utiliser
+if (!$selectedCategoryId && $selectedCategoryIdFromType) {
+    $selectedCategoryId = $selectedCategoryIdFromType;
 }
 
 // Récupérer les types de catégorie si une catégorie est sélectionnée
@@ -55,51 +87,138 @@ try {
     $allTypes = [];
 }
 
-// Récupérer tous les produits avec leurs types de catégorie et types
+// Récupérer tous les produits avec leurs types de catégorie et types (en tenant compte des filtres)
 try {
-    $stmt = $pdo->query("
+    $sql = "
         SELECT p.*, 
-               tc.name as type_category_name,
-               tc.id as type_category_id,
-               t.id as type_id,
-               t.name as type_name,
+               tc.name  AS type_category_name,
+               tc.id    AS type_category_id,
+               t.id     AS type_id,
+               t.name   AS type_name,
                p.max_length,
                p.max_width
         FROM products p
         LEFT JOIN types_categories tc ON p.type_category_id = tc.id
         LEFT JOIN types t ON tc.types_id = t.id
-        ORDER BY p.id DESC
-    ");
-    $allProducts = $stmt->fetchAll();
-    } catch (PDOException $e) {
-        // Si la jointure échoue, récupérer sans types
-        try {
-            $stmt = $pdo->query("
-                SELECT p.*, 
-                       tc.name as type_category_name,
-                       tc.id as type_category_id,
-                       p.max_length,
-                       p.max_width
-                FROM products p
-                LEFT JOIN types_categories tc ON p.type_category_id = tc.id
-                ORDER BY p.id DESC
-            ");
-            $allProducts = $stmt->fetchAll();
-        } catch (PDOException $e2) {
-            $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
-            $allProducts = $stmt->fetchAll();
-        }
+        WHERE 1=1
+    ";
+
+    $params = [];
+
+    // Filtre par catégorie (ID de catégorie si disponible)
+    if (!empty($selectedCategoryId)) {
+        $sql .= " AND p.category_id = ?";
+        $params[] = (int)$selectedCategoryId;
+    } elseif (!empty($selectedCategory)) {
+        // Fallback par nom de catégorie si pas d'ID
+        $sql .= " AND p.category = ?";
+        $params[] = $selectedCategory;
     }
+
+    // Filtre par type de catégorie (types_categories)
+    if (!empty($selectedTypeCategory)) {
+        $sql .= " AND p.type_category_id = ?";
+        $params[] = (int)$selectedTypeCategory;
+    }
+
+    // Filtre par type (En stock / Sur mesure)
+    if (!empty($selectedType)) {
+        $sql .= " AND t.id = ?";
+        $params[] = (int)$selectedType;
+    }
+
+    $sql .= " ORDER BY p.id DESC";
+
+    if (!empty($params)) {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+    } else {
+        $stmt = $pdo->query($sql);
+    }
+
+    $allProducts = $stmt->fetchAll();
+} catch (PDOException $e) {
+    // Si la jointure échoue, récupérer sans les infos de type
+    try {
+        $fallbackSql = "
+            SELECT p.*, 
+                   tc.name AS type_category_name,
+                   tc.id   AS type_category_id,
+                   p.max_length,
+                   p.max_width
+            FROM products p
+            LEFT JOIN types_categories tc ON p.type_category_id = tc.id
+            WHERE 1=1
+        ";
+
+        $params = [];
+
+        if (!empty($selectedCategoryId)) {
+            $fallbackSql .= " AND p.category_id = ?";
+            $params[] = (int)$selectedCategoryId;
+        } elseif (!empty($selectedCategory)) {
+            $fallbackSql .= " AND p.category = ?";
+            $params[] = $selectedCategory;
+        }
+
+        if (!empty($selectedTypeCategory)) {
+            $fallbackSql .= " AND p.type_category_id = ?";
+            $params[] = (int)$selectedTypeCategory;
+        }
+
+        $fallbackSql .= " ORDER BY p.id DESC";
+
+        if (!empty($params)) {
+            $stmt = $pdo->prepare($fallbackSql);
+            $stmt->execute($params);
+        } else {
+            $stmt = $pdo->query($fallbackSql);
+        }
+
+        $allProducts = $stmt->fetchAll();
+    } catch (PDOException $e2) {
+        // Fallback final : sans jointure ni filtre
+        $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
+        $allProducts = $stmt->fetchAll();
+    }
+}
+
+// Calculer le nombre de produits et déterminer le nombre de colonnes pour la grille
+$productsCount = count($allProducts);
+$productCols = 4; // valeur par défaut
+
+if ($productsCount === 1) {
+    $productCols = 1;
+} elseif ($productsCount === 2) {
+    $productCols = 2;
+} elseif (in_array($productsCount, [3, 6, 7, 9], true)) {
+    $productCols = 3;
+} elseif (in_array($productsCount, [4, 8], true)) {
+    $productCols = 4;
+} elseif (in_array($productsCount, [5, 10], true)) {
+    $productCols = 5;
+} else {
+    // Fallback pour d'autres nombres : garder une grille raisonnable
+    if ($productsCount <= 3 && $productsCount > 0) {
+        $productCols = $productsCount;
+    } elseif ($productsCount >= 11) {
+        $productCols = 5;
+    } else {
+        $productCols = 4;
+    }
+}
 ?>
 
-<section class="hero" style="padding: 4rem 2rem;">
-    <div class="hero-content">
-        <h1>Notre Catalogue Complet</h1>
-        <p>Découvrez tous nos meubles et trouvez celui qui correspond à vos besoins</p>
-    </div>
-</section>
-
 <div class="container">
+    <!-- Bouton de retour -->
+    <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
+        <a href="<?php echo isset($_SERVER['HTTP_REFERER']) ? htmlspecialchars($_SERVER['HTTP_REFERER']) : 'categories.php'; ?>" 
+           class="btn" 
+           style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; text-decoration: none;">
+            ← Retour
+        </a>
+    </div>
+
     <!-- Section Produits -->
     <section id="products">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
@@ -120,7 +239,7 @@ try {
                             <option value="<?php echo isset($category['id']) ? $category['id'] : htmlspecialchars($category['name']); ?>" 
                                     data-name="<?php echo htmlspecialchars($category['name']); ?>"
                                     <?php echo ($selectedCategory === $category['name'] || (isset($category['id']) && $selectedCategoryId == $category['id'])) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($category['icon'] ?? ''); ?> <?php echo htmlspecialchars($category['name']); ?>
+                                <?php echo htmlspecialchars($category['name']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -172,7 +291,7 @@ try {
         </div>
 
         <!-- Grille de produits améliorée -->
-        <div class="products-grid" style="gap: 2rem;">
+        <div class="products-grid products-grid-dynamic cols-<?php echo $productCols; ?>">
             <?php if (empty($allProducts)): ?>
                 <div style="grid-column: 1 / -1; text-align: center; padding: 5rem 2rem; background: var(--bg-light); border-radius: 15px;">
                     <div style="font-size: 5rem; margin-bottom: 1.5rem;">📦</div>
@@ -198,24 +317,24 @@ try {
                         <!-- Image produit -->
                         <div style="position: relative; overflow: hidden; height: 280px; background: var(--bg-light);">
                             <img src="<?php echo htmlspecialchars($product['image']); ?>" 
-                                 alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                                 alt="<?php echo htmlspecialchars($product['name'] . ' - ' . $product['category'] . ' - Frachdark'); ?>" 
                                  class="product-image"
+                                 loading="lazy"
+                                 width="300"
+                                 height="280"
                                  style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;"
                                  onerror="this.src='https://via.placeholder.com/300x280?text=Produit'">
                             <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.3), transparent); height: 50%;"></div>
                         </div>
                         
-                        <div class="product-info" style="padding: 1.5rem;">
-                            <h3 class="product-name" style="font-size: 1.3rem; margin-bottom: 0.75rem; min-height: 3rem; display: flex; align-items: center;">
+                        <div class="product-info">
+                            <h3 class="product-name">
                                 <?php echo htmlspecialchars($product['name']); ?>
                             </h3>
-                            <p class="product-description" style="color: var(--text-light); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem; min-height: 3rem;">
-                                <?php echo htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?>
-                            </p>
-                            <div class="product-price" style="font-size: 1.8rem; font-weight: bold; color: var(--accent-color); margin-bottom: 1.5rem; padding: 0.75rem 0; border-top: 2px solid var(--bg-light); border-bottom: 2px solid var(--bg-light);">
+                            <div class="product-price">
                                 <?php echo number_format($product['price'], 2, ',', ' '); ?> DH
                             </div>
-                            <div class="product-actions" style="display: flex; gap: 0.75rem;">
+                            <div class="product-actions">
                                 <a href="product.php?id=<?php echo $product['id']; ?>" 
                                    class="btn" 
                                    style="flex: 1; text-align: center; padding: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.9rem;">
@@ -392,6 +511,9 @@ function resetFilters() {
     filterProducts();
 }
 
+// ID de type de catégorie initial provenant de l'URL (si présent)
+let initialTypeCategoryId = "<?php echo $selectedTypeCategory ? (int)$selectedTypeCategory : ''; ?>";
+
 // Charger les types de catégorie
 function loadTypesByCategory(categoryId) {
     const typeSelect = document.getElementById('filter-type-category');
@@ -428,9 +550,13 @@ function loadTypesByCategory(categoryId) {
     typeSelect.disabled = true;
     typeSelect.innerHTML = '<option value="all">Chargement...</option>';
     
-    // Charger les types via AJAX avec le filtre de type si sélectionné
+    // Charger les types via AJAX
+    // IMPORTANT :
+    // - Si on arrive avec un type_category dans l'URL (initialTypeCategoryId),
+    //   on NE filtre PAS par type_id côté AJAX, afin que ce type_category soit toujours présent.
+    // - Sinon (interaction utilisateur), on peut filtrer par type_id.
     let apiUrl = `admin/get_types_by_category.php?category_id=${categoryId}`;
-    if (selectedTypeId && selectedTypeId !== 'all' && selectedTypeId !== '') {
+    if (!initialTypeCategoryId && selectedTypeId && selectedTypeId !== 'all' && selectedTypeId !== '') {
         apiUrl += `&type_id=${selectedTypeId}`;
     }
     
@@ -478,6 +604,17 @@ function loadTypesByCategory(categoryId) {
             typeContainer.style.setProperty('gap', '1rem', 'important');
             typeContainer.style.setProperty('flex', '1', 'important');
             typeContainer.style.setProperty('min-width', '200px', 'important');
+
+            // Si un type_category est présent dans l'URL, le sélectionner après chargement
+            if (initialTypeCategoryId && typeSelect.querySelector(`option[value="${initialTypeCategoryId}"]`)) {
+                typeSelect.value = String(initialTypeCategoryId);
+                // Appliquer le filtrage une fois que la valeur est sélectionnée
+                if (typeof window.filterProducts === 'function') {
+                    window.filterProducts();
+                }
+                // Éviter de réutiliser cette valeur lors des changements ultérieurs de catégorie
+                initialTypeCategoryId = "";
+            }
             typeContainer.style.setProperty('position', 'relative', 'important');
             typeContainer.style.setProperty('z-index', '10', 'important');
             typeContainer.style.setProperty('margin', '0', 'important');
@@ -606,15 +743,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const categorySelect = document.getElementById('filter-category');
     
     <?php if ($selectedCategoryId): ?>
-        // Charger les types si une catégorie est sélectionnée
+        // Si une catégorie est sélectionnée, afficher le conteneur des types
         if (typeContainer) {
             typeContainer.classList.remove('hidden');
             typeContainer.style.display = 'flex';
         }
+        <?php if (empty($selectedTypeCategory)): ?>
+        // Si aucun type_category n'est imposé par l'URL, charger dynamiquement les types
         setTimeout(function() {
-            // Charger les types en tenant compte du type sélectionné (si présent)
             loadTypesByCategory(<?php echo $selectedCategoryId; ?>);
         }, 100);
+        <?php endif; ?>
     <?php endif; ?>
     
     <?php if ($selectedCategory || $selectedTypeCategory || $selectedType): ?>
@@ -640,11 +779,15 @@ document.addEventListener('DOMContentLoaded', function() {
     <?php endif; ?>
     
     // S'assurer que le select de catégorie fonctionne correctement
+    // Ne pas recharger les types ici si un type_category est déjà imposé par l'URL,
+    // pour éviter d'écraser la valeur sélectionnée côté PHP.
+    <?php if (empty($selectedTypeCategory)): ?>
     if (categorySelect && categorySelect.value && categorySelect.value !== 'all') {
         setTimeout(function() {
             loadTypesByCategory(categorySelect.value);
         }, 150);
     }
+    <?php endif; ?>
 });
 
 // S'assurer que filterProducts est définie après le chargement de script.js

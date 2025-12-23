@@ -1,7 +1,36 @@
 <?php
+// Configuration SEO pour la page Contact
+$siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
 $pageTitle = "Contact";
-require_once 'includes/header.php';
+$pageMetaDescription = "Contactez Frachdark pour toute question sur nos meubles. Notre équipe est à votre disposition pour vous conseiller et vous accompagner dans votre projet d'aménagement intérieur.";
+$pageKeywords = "contact, service client, support, questions meubles, assistance, frachdark, coordonnées";
+$pageImage = $siteUrl . '/images/logo.jpg';
 
+require_once 'includes/header.php';
+?>
+
+<!-- Structured Data pour ContactPage -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "mainEntity": {
+        "@type": "Organization",
+        "name": "Frachdark - Meubles de Maison",
+        "email": "contact@meublesmaison.com",
+        "telephone": "+33123456789",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "123 Rue du Commerce",
+            "addressLocality": "Paris",
+            "postalCode": "75001",
+            "addressCountry": "FR"
+        }
+    }
+}
+</script>
+
+<?php
 $success = false;
 $error = '';
 
@@ -30,17 +59,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<section class="hero" style="padding: 4rem 2rem; position: relative;">
-    <a href="index.php" style="position: absolute; top: 2rem; left: 2rem; display: inline-flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; padding: 0.75rem 1.25rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border-radius: 8px; transition: all 0.3s ease; font-size: 0.95rem; font-weight: 500; z-index: 10; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateX(-3px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateX(0)';">
-        ← Retour à l'accueil
-    </a>
-    <div class="hero-content">
-        <h1>Contactez-nous</h1>
-        <p>Nous sommes là pour répondre à toutes vos questions</p>
-    </div>
-</section>
+
 
 <div class="container">
+    <!-- Bouton de retour -->
+    <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
+        <a href="<?php echo isset($_SERVER['HTTP_REFERER']) ? htmlspecialchars($_SERVER['HTTP_REFERER']) : 'index.php'; ?>" 
+           class="btn" 
+           style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; text-decoration: none;">
+            ← Retour
+        </a>
+    </div>
+
     <div style="max-width: 1200px; margin: 0 auto;">
         
         <?php if ($success): ?>
@@ -132,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <span style="color: var(--primary-color);">📞</span> Téléphone
                             </label>
                             <input type="tel" id="phone" name="phone"
-                                   placeholder="01 23 45 67 89 (optionnel)"
+                                   placeholder="01 23 45 67 89 "
                                    value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>">
                         </div>
                         
@@ -154,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Section Informations supplémentaires -->
         <section style="margin-top: 4rem; background: var(--bg-light); padding: 3rem 2rem; border-radius: 15px; text-align: center;">
-            <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.5rem;">Besoin d'aide ?</h3>
+            <h2 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.5rem;">Besoin d'aide ?</h2>
             <p style="color: var(--text-light); font-size: 1.1rem; line-height: 1.8; max-width: 600px; margin: 0 auto;">
                 Notre équipe est disponible pour répondre à toutes vos questions concernant nos produits, 
                 les délais de livraison, les retours ou toute autre demande. N'hésitez pas à nous contacter !

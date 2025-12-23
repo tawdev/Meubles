@@ -51,7 +51,34 @@
             <p>&copy; <?php echo date('Y'); ?> C-Digital. Tous droits réservés.</p>
         </div>
     </footer>
-    <script src="script.js"></script>
+    
+    <!-- Structured Data pour Footer -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Frachdark - Meubles de Maison",
+        "url": "<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST']; ?>",
+        "logo": "<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST']; ?>/images/logo.jpg",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+212-524308038",
+            "contactType": "Customer Service",
+            "email": "contact@meublesmaison.com",
+            "areaServed": "MA",
+            "availableLanguage": ["fr", "ar"]
+        },
+        "sameAs": [
+            "https://www.facebook.com/frachdark",
+            "https://www.instagram.com/frachdark",
+            "https://www.youtube.com/frachdark",
+            "https://www.tiktok.com/@frachdark"
+        ]
+    }
+    </script>
+    
+    <!-- Optimisation: Charger le script en différé pour améliorer les performances -->
+    <script src="script.js" defer></script>
 </body>
 </html>
 

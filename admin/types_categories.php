@@ -13,13 +13,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $name = trim($_POST['name'] ?? '');
                 $categoryId = intval($_POST['category_id'] ?? 0);
                 $typeId = !empty($_POST['type_id']) ? intval($_POST['type_id']) : null;
+                $image = trim($_POST['image'] ?? ''); // Pour compatibilité avec saisie manuelle
+                
+                // Gestion de l'upload d'image
+                if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = '../images/types/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    
+                    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    $fileType = $_FILES['image_file']['type'];
+                    
+                    if (in_array($fileType, $allowedTypes)) {
+                        $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($_FILES['image_file']['name']));
+                        $targetFile = $uploadDir . $fileName;
+                        
+                        if (move_uploaded_file($_FILES['image_file']['tmp_name'], $targetFile)) {
+                            $image = 'images/types/' . $fileName;
+                        } else {
+                            $error = 'Erreur lors de l\'upload de l\'image.';
+                        }
+                    } else {
+                        $error = 'Type de fichier non autorisé. Formats acceptés : JPG, PNG, GIF, WEBP';
+                    }
+                }
                 
                 if (empty($name) || $categoryId <= 0) {
                     $error = 'Le nom et la catégorie sont obligatoires.';
                 } else {
                     try {
-                        $stmt = $pdo->prepare("INSERT INTO types_categories (name, category_id, types_id) VALUES (?, ?, ?)");
-                        $stmt->execute([$name, $categoryId, $typeId]);
+                        $stmt = $pdo->prepare("INSERT INTO types_categories (name, category_id, types_id, image) VALUES (?, ?, ?, ?)");
+                        $stmt->execute([$name, $categoryId, $typeId, $image]);
                         $success = true;
                         $_POST = [];
                     } catch (PDOException $e) {
@@ -33,13 +58,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $name = trim($_POST['name'] ?? '');
                 $categoryId = intval($_POST['category_id'] ?? 0);
                 $typeId = !empty($_POST['type_id']) ? intval($_POST['type_id']) : null;
+                $image = $editType['image'] ?? ''; // Conserver l'image existante par défaut
+                
+                // Gestion de l'upload d'image si une nouvelle est fournie
+                if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = '../images/types/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    
+                    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    $fileType = $_FILES['image_file']['type'];
+                    
+                    if (in_array($fileType, $allowedTypes)) {
+                        $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($_FILES['image_file']['name']));
+                        $targetFile = $uploadDir . $fileName;
+                        
+                        if (move_uploaded_file($_FILES['image_file']['tmp_name'], $targetFile)) {
+                            // Supprimer l'ancienne image si elle existe
+                            if (!empty($image) && file_exists('../' . $image)) {
+                                unlink('../' . $image);
+                            }
+                            $image = 'images/types/' . $fileName;
+                        } else {
+                            $error = 'Erreur lors de l\'upload de l\'image.';
+                        }
+                    } else {
+                        $error = 'Type de fichier non autorisé. Formats acceptés : JPG, PNG, GIF, WEBP';
+                    }
+                } elseif (!empty($_POST['image'])) {
+                    // Permettre aussi la saisie manuelle du chemin
+                    $image = trim($_POST['image']);
+                }
                 
                 if (empty($name) || $categoryId <= 0) {
                     $error = 'Le nom et la catégorie sont obligatoires.';
                 } else {
                     try {
-                        $stmt = $pdo->prepare("UPDATE types_categories SET name = ?, category_id = ?, types_id = ? WHERE id = ?");
-                        $stmt->execute([$name, $categoryId, $typeId, $id]);
+                        $stmt = $pdo->prepare("UPDATE types_categories SET name = ?, category_id = ?, types_id = ?, image = ? WHERE id = ?");
+                        $stmt->execute([$name, $categoryId, $typeId, $image, $id]);
                         $success = true;
                     } catch (PDOException $e) {
                         $error = 'Erreur lors de la modification : ' . $e->getMessage();
@@ -96,7 +153,7 @@ $searchTerm = $_GET['search'] ?? '';
 
 // Construire la requête avec filtres
 $query = "
-    SELECT tc.*, c.name as category_name, c.icon as category_icon,
+    SELECT tc.*, c.name as category_name, c.image as category_image,
            t.name as type_name, t.id as type_id,
            (SELECT COUNT(*) FROM products WHERE type_category_id = tc.id) as product_count
     FROM types_categories tc
@@ -185,7 +242,7 @@ if (isset($_GET['edit'])) {
             <h2 style="margin-bottom: 1rem; color: var(--primary-color);">
                 <?php echo $editType ? 'Modifier le type de catégorie' : 'Ajouter un nouveau type de catégorie'; ?>
             </h2>
-            <form method="POST" action="types_categories.php">
+            <form method="POST" action="types_categories.php" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="<?php echo $editType ? 'edit' : 'add'; ?>">
                 <?php if ($editType): ?>
                     <input type="hidden" name="id" value="<?php echo $editType['id']; ?>">
@@ -198,7 +255,7 @@ if (isset($_GET['edit'])) {
                         <?php foreach ($categoriesList as $cat): ?>
                             <option value="<?php echo $cat['id']; ?>" 
                                     <?php echo ($editType && $editType['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($cat['icon'] ?? ''); ?> <?php echo htmlspecialchars($cat['name']); ?>
+                                <?php echo htmlspecialchars($cat['name']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -224,6 +281,27 @@ if (isset($_GET['edit'])) {
                            placeholder="Ex: Canapé, Table basse, Lit..."
                            value="<?php echo $editType ? htmlspecialchars($editType['name']) : (isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''); ?>">
                     <small style="color: var(--text-light);">Le nom du type de catégorie (ex: Canapé pour Salon)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="image_file">Image du type</label>
+                    <?php if ($editType && !empty($editType['image'])): ?>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-light);">Image actuelle :</label>
+                            <img src="../<?php echo htmlspecialchars($editType['image']); ?>" 
+                                 alt="Image actuelle" 
+                                 style="max-width: 200px; height: auto; border-radius: 8px; border: 2px solid var(--border-light);"
+                                 onerror="this.style.display='none';">
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" id="image_file" name="image_file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+                           style="padding: 0.5rem; border: 2px dashed var(--border-light); border-radius: 8px; width: 100%; cursor: pointer; background: var(--bg-light);">
+                    <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">
+                        Formats acceptés : JPG, PNG, GIF, WEBP (max 5MB). 
+                        <?php if ($editType): ?>
+                            Laisser vide pour conserver l'image actuelle.
+                        <?php endif; ?>
+                    </small>
                 </div>
                 
                 <div style="display: flex; gap: 1rem;">
@@ -259,7 +337,7 @@ if (isset($_GET['edit'])) {
                     <?php foreach ($categoriesList as $cat): ?>
                         <option value="<?php echo $cat['id']; ?>" 
                                 <?php echo ($filterCategory == $cat['id']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($cat['icon'] ?? ''); ?> <?php echo htmlspecialchars($cat['name']); ?>
+                            <?php echo htmlspecialchars($cat['name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -301,6 +379,7 @@ if (isset($_GET['edit'])) {
                 <tr>
                     <th>ID</th>
                     <th>Catégorie</th>
+                    <th>Image du type</th>
                     <th>Type (stock/mesure)</th>
                     <th>Nom du type</th>
                     <th>Produits</th>
@@ -326,8 +405,17 @@ if (isset($_GET['edit'])) {
                     <tr>
                         <td><?php echo $type['id']; ?></td>
                         <td>
-                            <span style="font-size: 1.2rem;"><?php echo htmlspecialchars($type['category_icon'] ?? ''); ?></span>
                             <strong><?php echo htmlspecialchars($type['category_name'] ?? 'N/A'); ?></strong>
+                        </td>
+                        <td>
+                            <?php if (!empty($type['image'])): ?>
+                                <img src="../<?php echo htmlspecialchars($type['image']); ?>" 
+                                     alt="<?php echo htmlspecialchars($type['name']); ?>" 
+                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-light);"
+                                     onerror="this.src='../images/placeholder.jpg';">
+                            <?php else: ?>
+                                <span style="color: var(--text-light);">Aucune image</span>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <?php if (!empty($type['type_name'])): ?>

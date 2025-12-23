@@ -1,34 +1,84 @@
 <?php
+// Configuration SEO pour la page d'accueil
+$siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
 $pageTitle = "Accueil";
+$pageMetaDescription = "Frachdark - Découvrez notre collection exclusive de meubles modernes et élégants pour transformer votre intérieur. Salon, chambre, salle à manger, bureau et décoration. Qualité premium, livraison rapide, paiement sécurisé.";
+$pageKeywords = "meubles, meubles de maison, mobilier, salon, chambre, salle à manger, bureau, décoration, frachdark, meubles modernes, meubles élégants, mobilier intérieur, ameublement";
+$pageImage = $siteUrl . '/images/logo.jpg';
+
 require_once 'includes/header.php';
 
 // Récupérer les catégories
 try {
     $categoriesStmt = $pdo->query("SELECT * FROM categories ORDER BY name");
     $categoriesList = $categoriesStmt->fetchAll();
-
-    // Harmoniser l'icône de la catégorie Bureau
-    foreach ($categoriesList as &$cat) {
-        if (isset($cat['name']) && $cat['name'] === 'Bureau') {
-            $cat['icon'] = '🖥️';
-        }
-    }
-    unset($cat);
 } catch (PDOException $e) {
     // Si la table categories n'existe pas, utiliser les catégories par défaut
     $categoriesList = [
-        ['name' => 'Salon', 'icon' => '🛋️'],
-        ['name' => 'Chambre', 'icon' => '🛏️'],
-        ['name' => 'Salle à manger', 'icon' => '🍽️'],
-        ['name' => 'Bureau', 'icon' => '🖥️'],
-        ['name' => 'Décoration', 'icon' => '🖼️']
+        ['name' => 'Salon', 'image' => ''],
+        ['name' => 'Chambre', 'image' => ''],
+        ['name' => 'Salle à manger', 'image' => ''],
+        ['name' => 'Bureau', 'image' => ''],
+        ['name' => 'Décoration', 'image' => '']
     ];
 }
 
-// Récupérer les produits en vedette
-$stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC LIMIT 8");
+// Récupérer les produits en vedette (tous les produits pour le slider)
+$stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
 $featuredProducts = $stmt->fetchAll();
+
+// Récupérer tous les types de catégories pour le slider sur la home
+$homeTypesCategories = [];
+try {
+    $sqlHomeTypes = "
+        SELECT tc.*,
+               c.name  AS category_name,
+               c.id    AS category_id,
+               c.image AS category_image
+        FROM types_categories tc
+        LEFT JOIN categories c ON tc.category_id = c.id
+        ORDER BY c.name, tc.name
+    ";
+    $stmtHomeTypes = $pdo->query($sqlHomeTypes);
+    $homeTypesCategories = $stmtHomeTypes->fetchAll();
+} catch (PDOException $e) {
+    $homeTypesCategories = [];
+}
 ?>
+
+<!-- Structured Data pour Organisation -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "FurnitureStore",
+    "name": "Frachdark - Meubles de Maison",
+    "description": "Boutique en ligne de meubles modernes et élégants pour votre intérieur",
+    "url": "<?php echo $siteUrl; ?>",
+    "logo": "<?php echo $siteUrl; ?>/images/logo.jpg",
+    "image": "<?php echo $siteUrl; ?>/images/logo.jpg",
+    "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "MA"
+    },
+    "priceRange": "$$",
+    "paymentAccepted": "Cash, Credit Card",
+    "currenciesAccepted": "MAD"
+}
+</script>
+
+<!-- Structured Data pour WebSite -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Frachdark - Meubles de Maison",
+    "url": "<?php echo $siteUrl; ?>",
+    "potentialAction": {
+        "@type": "SearchAction",
+        "target": "<?php echo $siteUrl; ?>/products.php?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+    }
+</script>
 
 <section class="hero">
     <div class="hero-content">
@@ -44,45 +94,149 @@ $featuredProducts = $stmt->fetchAll();
 
 <div class="container">
     <!-- Section Catégories -->
-    <section id="categories" style="min-height: 95vh; display: flex; flex-direction: column; justify-content: center; padding: 4rem 0;">
+    <section id="categories" style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding: 4rem 0;">
         <div class="categories-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <h2 class="section-title" style="margin-bottom: 0; margin-left: 1rem;">Nos Catégories</h2>
             <a href="categories.php" class="btn view-all-categories-btn view-all-desktop" style="padding: 0.75rem 1.5rem;">Voir toutes les catégories →</a>
         </div>
-        <div class="categories">
-            <?php foreach (array_slice($categoriesList, 0, 4) as $category): ?>
-                <a href="products.php?category=<?php echo urlencode($category['name']); ?>" class="category-card" style="text-decoration: none; color: inherit;">
-                    <div style="font-size: 4rem; margin-bottom: 1rem;"><?php echo htmlspecialchars($category['icon'] ?? '📦'); ?></div>
-                    <h3><?php echo htmlspecialchars($category['name']); ?></h3>
-                </a>
-            <?php endforeach; ?>
+
+        <!-- Slider de catégories -->
+        <div class="home-categories-slider">
+            <button class="home-categories-btn prev" aria-label="Catégorie précédente">‹</button>
+            <div class="home-categories-track">
+                <?php foreach ($categoriesList as $category): ?>
+                    <a href="types.php?category=<?php echo isset($category['id']) ? (int)$category['id'] : urlencode($category['name']); ?>" 
+                       class="category-card home-category-card" 
+                       style="text-decoration: none; color: inherit;">
+                        <div class="home-category-image-wrapper">
+                            <?php if (!empty($category['image'])): ?>
+                                <img src="<?php echo htmlspecialchars($category['image']); ?>" 
+                                     alt="<?php echo htmlspecialchars($category['name']); ?>">
+                            <?php else: ?>
+                                <div class="home-category-placeholder">📦</div>
+                            <?php endif; ?>
+                        </div>
+                        <h3><?php echo htmlspecialchars($category['name']); ?></h3>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+            <button class="home-categories-btn next" aria-label="Catégorie suivante">›</button>
         </div>
         <div class="view-all-mobile" style="text-align: center; margin-top: 2rem; display: none;">
             <a href="categories.php" class="btn" style="padding: 0.75rem 1.5rem;">Voir toutes les catégories →</a>
         </div>
     </section>
 
+    <!-- Section Types de catégories (slider) -->
+    <?php if (!empty($homeTypesCategories)): ?>
+    <section id="home-types-categories" style="padding: 3rem 0 1rem 0;">
+        <div class="categories-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2 class="section-title" style="margin-bottom: 0; margin-left: 1rem;">Nos Types de catégories</h2>
+            <a href="types.php" class="btn view-all-categories-btn view-all-desktop" style="padding: 0.75rem 1.5rem;">Voir tous les types →</a>
+        </div>
+
+        <div class="home-categories-slider">
+            <button class="home-categories-btn prev" aria-label="Type précédent">‹</button>
+            <div class="home-categories-track">
+                <?php foreach ($homeTypesCategories as $typeCat): ?>
+                    <?php
+                        $cardImage = '';
+                        if (!empty($typeCat['image'])) {
+                            $cardImage = $typeCat['image'];
+                        } elseif (!empty($typeCat['category_image'])) {
+                            $cardImage = $typeCat['category_image'];
+                        }
+                        $categoryName = $typeCat['category_name'] ?? '';
+                    ?>
+                    <a href="products.php?category=<?php echo urlencode($categoryName); ?>&type_category=<?php echo (int)$typeCat['id']; ?>"
+                       class="category-card home-category-card"
+                       style="text-decoration: none; color: inherit;">
+                        <div class="home-category-image-wrapper">
+                            <?php if (!empty($cardImage)): ?>
+                                <img src="<?php echo htmlspecialchars($cardImage); ?>"
+                                     alt="<?php echo htmlspecialchars($typeCat['name']); ?>">
+                            <?php else: ?>
+                                <div class="home-category-placeholder">📦</div>
+                            <?php endif; ?>
+                        </div>
+                        <h3><?php echo htmlspecialchars($typeCat['name']); ?></h3>
+                        <?php if (!empty($categoryName)): ?>
+                            <p style="text-align:center; color: var(--text-light); font-size: 0.9rem; margin-top: 0.25rem;">
+                                <?php echo htmlspecialchars($categoryName); ?>
+                            </p>
+                        <?php endif; ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+            <button class="home-categories-btn next" aria-label="Type suivant">›</button>
+        </div>
+
+        <div class="view-all-mobile" style="text-align: center; margin-top: 2rem; display: none;">
+            <a href="types.php" class="btn" style="padding: 0.75rem 1.5rem;">Voir tous les types →</a>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <!-- Section Produits en vedette (slider) -->
+    <?php if (!empty($featuredProducts)): ?>
+    <section id="home-featured-products" style="padding: 3rem 0 1rem 0;">
+        <div class="categories-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2 class="section-title" style="margin-bottom: 0; margin-left: 1rem;">Produits en vedette</h2>
+            <a href="products.php" class="btn view-all-categories-btn view-all-desktop" style="padding: 0.75rem 1.5rem;">Voir tous les produits →</a>
+        </div>
+
+        <div class="home-categories-slider">
+            <button class="home-categories-btn prev" aria-label="Produit précédent">‹</button>
+            <div class="home-categories-track">
+                <?php foreach ($featuredProducts as $product): ?>
+                    <a href="product.php?id=<?php echo $product['id']; ?>"
+                       class="category-card home-category-card"
+                       style="text-decoration: none; color: inherit;">
+                        <div class="home-category-image-wrapper">
+                            <?php if (!empty($product['image'])): ?>
+                                <img src="<?php echo htmlspecialchars($product['image']); ?>"
+                                     alt="<?php echo htmlspecialchars($product['name']); ?>">
+                            <?php else: ?>
+                                <div class="home-category-placeholder">📦</div>
+                            <?php endif; ?>
+                        </div>
+                        <h3><?php echo htmlspecialchars($product['name']); ?></h3>
+                        <p style="text-align:center; color: var(--secondary-color); font-weight: 600; margin-top: 0.25rem;">
+                            <?php echo number_format($product['price'], 2, ',', ' '); ?> DH
+                        </p>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+            <button class="home-categories-btn next" aria-label="Produit suivant">›</button>
+        </div>
+
+        <div class="view-all-mobile" style="text-align: center; margin-top: 2rem; display: none;">
+            <a href="products.php" class="btn" style="padding: 0.75rem 1.5rem;">Voir tous les produits →</a>
+        </div>
+    </section>
+    <?php endif; ?>
+
     <!-- Section galerie -->
     <section id="gallery" style="padding: 5rem 0; margin: 4rem 0; background: linear-gradient(180deg, var(--bg-white) 0%, var(--bg-light) 100%);">
         <div class="container">
-            <h2 class="section-title" style="text-align: center; margin-bottom: 3rem; color: var(--primary-color); font-size: 2.5rem;">
+            <h2 class="section-title" style="text-align: center; margin-bottom: 3rem; color: var(--primary-color); font-size: 2.5rem; margin-top: -140px;">
                 Notre Galerie
             </h2>
             <div class="parent">
                 <div class="div1 gallery-card">
-                    <img src="images/gpt-image-1-mini_b_efacer_le_text_dans_.png" alt="Ambiance salon" onerror="this.src='images/placeholder.jpg'">
+                    <img src="images/gpt-image-1-mini_b_efacer_le_text_dans_.png" alt="Ambiance salon moderne avec meubles Frachdark" loading="lazy" width="400" height="500" onerror="this.src='images/placeholder.jpg'">
                 </div>
                 <div class="div2 gallery-card">
-                    <img src="images/hunyuan-image-3.0_b_Crée_une_image_de_fo.png" alt="Coin lecture" onerror="this.src='images/placeholder.jpg'">
+                    <img src="images/hunyuan-image-3.0_b_Crée_une_image_de_fo.png" alt="Coin lecture élégant avec mobilier Frachdark" loading="lazy" width="400" height="500" onerror="this.src='images/placeholder.jpg'">
                 </div>
                 <div class="div3 gallery-card">
-                    <img src="images/wan2.5-t2i-preview_b_Crée_une_image_de_fo.png" alt="Salle à manger" onerror="this.src='images/placeholder.jpg'">
+                    <img src="images/wan2.5-t2i-preview_b_Crée_une_image_de_fo.png" alt="Salle à manger design avec meubles Frachdark" loading="lazy" width="400" height="500" onerror="this.src='images/placeholder.jpg'">
                 </div>
                 <div class="div4 gallery-card">
-                    <img src="images/a_Crée_une_image_de_fo.png" alt="Décor mural" onerror="this.src='images/placeholder.jpg'">
+                    <img src="images/a_Crée_une_image_de_fo.png" alt="Décor mural et décoration intérieure Frachdark" loading="lazy" width="400" height="500" onerror="this.src='images/placeholder.jpg'">
                 </div>
                 <div class="div5 gallery-card">
-                    <img src="images/Gemini_Generated_Image_nhd19rnhd19rnhd1.png" alt="Bureau design" onerror="this.src='images/placeholder.jpg'">
+                    <img src="images/Gemini_Generated_Image_nhd19rnhd19rnhd1.png" alt="Bureau design moderne Frachdark" loading="lazy" width="600" height="800" onerror="this.src='images/placeholder.jpg'">
                 </div>
             </div>
         </div>
@@ -90,7 +244,7 @@ $featuredProducts = $stmt->fetchAll();
 
     <!-- Section Pourquoi nous choisir -->
     <section id="why-us" style="margin-top: 4rem;">
-        <h2 class="section-title">Pourquoi Nous Choisir ?</h2>
+        <h2 class="section-title">Pourquoi Choisir Frachdark ?</h2>
         <div class="categories">
             <div class="category-card">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">✨</div>

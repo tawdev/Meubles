@@ -1,43 +1,44 @@
 <?php
+// Configuration SEO pour la page Catégories
+$siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
 $pageTitle = "Nos Catégories";
+$pageMetaDescription = "Explorez nos catégories de meubles : Salon, Chambre, Salle à manger, Bureau et Décoration. Trouvez l'inspiration pour aménager votre intérieur avec des meubles de qualité.";
+$pageKeywords = "catégories meubles, meubles salon, meubles chambre, meubles salle à manger, meubles bureau, décoration intérieure, frachdark";
+$pageImage = $siteUrl . '/images/logo.jpg';
+
 require_once 'includes/header.php';
 
-// Récupérer les catégories
+// Récupérer les catégories avec le nombre de types de catégories
 try {
-    $categoriesStmt = $pdo->query("SELECT c.*, (SELECT COUNT(*) FROM products WHERE category = c.name) as product_count FROM categories c ORDER BY name");
+    $categoriesStmt = $pdo->query("
+        SELECT c.*, 
+               (SELECT COUNT(*) FROM types_categories tc WHERE tc.category_id = c.id) AS type_count
+        FROM categories c
+        ORDER BY c.name
+    ");
     $categoriesList = $categoriesStmt->fetchAll();
-    
-    // Mettre à jour l'icône de Bureau si nécessaire
-    foreach ($categoriesList as &$cat) {
-        if ($cat['name'] === 'Bureau' && ($cat['icon'] === '💼' || empty($cat['icon']))) {
-            $cat['icon'] = '🖥️';
-        }
-    }
-    unset($cat);
 } catch (PDOException $e) {
-    // Si la table categories n'existe pas, utiliser les catégories par défaut
+    // Si la table categories (ou types_categories) n'existe pas, utiliser les catégories par défaut
     $categoriesList = [
-        ['name' => 'Salon', 'icon' => '🛋️', 'description' => 'Meubles pour le salon', 'product_count' => 0],
-        ['name' => 'Chambre', 'icon' => '🛏️', 'description' => 'Meubles pour la chambre', 'product_count' => 0],
-        ['name' => 'Salle à manger', 'icon' => '🍽️', 'description' => 'Meubles pour la salle à manger', 'product_count' => 0],
-        ['name' => 'Bureau', 'icon' => '🖥️', 'description' => 'Meubles de bureau', 'product_count' => 0],
-        ['name' => 'Décoration', 'icon' => '🖼️', 'description' => 'Éléments de décoration', 'product_count' => 0]
+        ['name' => 'Salon', 'image' => '', 'description' => 'Meubles pour le salon', 'type_count' => 0],
+        ['name' => 'Chambre', 'image' => '', 'description' => 'Meubles pour la chambre', 'type_count' => 0],
+        ['name' => 'Salle à manger', 'image' => '', 'description' => 'Meubles pour la salle à manger', 'type_count' => 0],
+        ['name' => 'Bureau', 'image' => '', 'description' => 'Meubles de bureau', 'type_count' => 0],
+        ['name' => 'Décoration', 'image' => '', 'description' => 'Éléments de décoration', 'type_count' => 0]
     ];
 }
 
 ?>
 
 <div class="container">
-    <!-- Hero Section pour la page catégories -->
-    <section class="hero" style="padding: 3rem 2rem; margin-bottom: 3rem; position: relative;">
-        <a href="index.php" style="position: absolute; top: 2rem; left: 2rem; display: inline-flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; padding: 0.75rem 1.25rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border-radius: 8px; transition: all 0.3s ease; font-size: 0.95rem; font-weight: 500; z-index: 10; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateX(-3px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateX(0)';">
-            ← Retour à l'accueil
+    <!-- Bouton de retour -->
+    <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
+        <a href="<?php echo isset($_SERVER['HTTP_REFERER']) ? htmlspecialchars($_SERVER['HTTP_REFERER']) : 'index.php'; ?>" 
+           class="btn" 
+           style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; text-decoration: none;">
+            ← Retour
         </a>
-        <div class="hero-content">
-            <h1>Nos Catégories</h1>
-            <p>Explorez notre collection organisée par catégories pour trouver exactement ce que vous cherchez</p>
-        </div>
-    </section>
+    </div>
 
     <!-- Liste des catégories -->
     <section id="categories-list">
@@ -45,11 +46,17 @@ try {
         
         <div class="categories" style="margin-bottom: 4rem;">
             <?php foreach ($categoriesList as $category): ?>
-                <a href="products.php?category=<?php echo urlencode($category['name']); ?>" 
+                <a href="types.php?category=<?php echo isset($category['id']) ? (int)$category['id'] : urlencode($category['name']); ?>" 
                    class="category-card" 
                    style="text-decoration: none; color: inherit; display: block;">
-                    <div style="font-size: 5rem; margin-bottom: 1rem; text-align: center;">
-                        <?php echo htmlspecialchars($category['icon'] ?? '📦'); ?>
+                    <div style="width: 100%; height: 200px; margin-bottom: 1rem; border-radius: 8px; overflow: hidden; background: var(--bg-light); display: flex; align-items: center; justify-content: center;">
+                        <?php if (!empty($category['image'])): ?>
+                            <img src="<?php echo htmlspecialchars($category['image']); ?>" 
+                                 alt="<?php echo htmlspecialchars($category['name']); ?>" 
+                                 style="width: 100%; height: 100%; object-fit: cover;">
+                        <?php else: ?>
+                            <div style="font-size: 4rem; color: var(--text-light);">📦</div>
+                        <?php endif; ?>
                     </div>
                     <h3 style="text-align: center; margin-bottom: 0.5rem;">
                         <?php echo htmlspecialchars($category['name']); ?>
@@ -60,7 +67,7 @@ try {
                         </p>
                     <?php endif; ?>
                     <p style="text-align: center; color: var(--secondary-color); font-weight: 600; margin-top: 1rem;">
-                        <?php echo $category['product_count'] ?? 0; ?> produit(s)
+                        <?php echo $category['type_count'] ?? 0; ?> type(s)
                     </p>
                 </a>
             <?php endforeach; ?>

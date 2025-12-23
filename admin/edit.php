@@ -222,7 +222,7 @@ require_once 'includes/header.php';
                     ?>
                         <option value="<?php echo $catId; ?>" 
                                 <?php echo $isSelected ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($cat['icon'] ?? ''); ?> <?php echo htmlspecialchars($cat['name']); ?>
+                            <?php echo htmlspecialchars($cat['name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

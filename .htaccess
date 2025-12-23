@@ -1,23 +1,123 @@
+# ============================================
 # Configuration Apache pour Meubles de Maison
+# Optimisé pour SEO et Performance
+# ============================================
 
 # Activer le moteur de réécriture
 RewriteEngine On
 
-# Rediriger vers index.php si le fichier n'existe pas
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+# Forcer HTTPS (décommenter quand SSL est activé)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Forcer www ou non-www (choisir une option)
+# RewriteCond %{HTTP_HOST} !^www\. [NC]
+# RewriteRule ^(.*)$ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Protection des fichiers sensibles
-<FilesMatch "\.(sql|log|ini)$">
-    Order allow,deny
-    Deny from all
+<FilesMatch "\.(sql|log|ini|md|ipynb)$">
+    Require all denied
 </FilesMatch>
 
-# Protection du dossier admin (optionnel - décommenter si nécessaire)
-# <Directory "admin">
-#     AuthType Basic
-#     AuthName "Zone Admin"
-#     AuthUserFile .htpasswd
-#     Require valid-user
-# </Directory>
+# Protection du dossier admin
+# Note: Pour protéger le dossier admin, créez un fichier .htaccess dans le dossier admin/
+# avec le contenu suivant:
+# AuthType Basic
+# AuthName "Zone Admin"
+# AuthUserFile /path/to/.htpasswd
+# Require valid-user
+
+# ============================================
+# OPTIMISATION DES PERFORMANCES
+# ============================================
+
+# Compression GZIP pour améliorer la vitesse
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# Mise en cache des fichiers statiques
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Images
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    
+    # CSS et JavaScript
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    
+    # Fonts
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    
+    # HTML
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+# Headers de cache
+<IfModule mod_headers.c>
+    # Cache-Control pour les fichiers statiques
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico|css|js|woff|woff2)$">
+        Header set Cache-Control "max-age=31536000, public"
+    </FilesMatch>
+    
+    # Pas de cache pour les pages PHP
+    <FilesMatch "\.(php)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+    
+    # Sécurité: X-Content-Type-Options
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Sécurité: X-Frame-Options
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # Sécurité: X-XSS-Protection
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# ============================================
+# OPTIMISATION SEO
+# ============================================
+
+# Redirection du sitemap
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+# Pages propres (URLs sans .php)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+# ============================================
+# SÉCURITÉ
+# ============================================
+
+# Bloquer l'accès aux fichiers de configuration
+<FilesMatch "^(\.htaccess|\.htpasswd|db\.php|config\.php)$">
+    Require all denied
+</FilesMatch>
+
+# Désactiver la liste des répertoires
+Options -Indexes
+
+# Protection contre les injections
+<IfModule mod_rewrite.c>
+    RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2})
+    RewriteRule ^(.*)$ index.php [F,L]
+</IfModule>
 

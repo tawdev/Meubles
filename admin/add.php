@@ -97,7 +97,7 @@ $searchTerm = $_GET['search'] ?? '';
 // Construire la requête avec filtres
 $query = "
     SELECT p.*, 
-           c.name as category_name, c.icon as category_icon,
+           c.name as category_name, c.image as category_image,
            tc.name as type_category_name, tc.id as type_category_id,
            t.name as type_name, t.id as type_id
     FROM products p
@@ -202,7 +202,7 @@ try {
                         <?php foreach ($categoriesList as $cat): ?>
                             <option value="<?php echo $cat['id']; ?>" 
                                     <?php echo (isset($_POST['category_id']) && $_POST['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($cat['icon'] ?? ''); ?> <?php echo htmlspecialchars($cat['name']); ?>
+                                <?php echo htmlspecialchars($cat['name']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -287,7 +287,7 @@ try {
                     <?php foreach ($categoriesList as $cat): ?>
                         <option value="<?php echo $cat['id']; ?>" 
                                 <?php echo ($filterCategory == $cat['id'] || $filterCategory == $cat['name']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($cat['icon'] ?? ''); ?> <?php echo htmlspecialchars($cat['name']); ?>
+                            <?php echo htmlspecialchars($cat['name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -360,7 +360,6 @@ try {
                         </td>
                         <td><?php echo htmlspecialchars($product['name']); ?></td>
                         <td>
-                            <span style="font-size: 1.2rem;"><?php echo htmlspecialchars($product['category_icon'] ?? ''); ?></span>
                             <?php echo htmlspecialchars($product['category'] ?? $product['category_name'] ?? 'N/A'); ?>
                         </td>
                         <td>

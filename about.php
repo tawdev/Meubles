@@ -1,19 +1,40 @@
 <?php
+// Configuration SEO pour la page À propos
+$siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
 $pageTitle = "À propos";
+$pageMetaDescription = "Découvrez l'histoire de Frachdark, votre partenaire de confiance pour transformer votre intérieur avec des meubles de qualité premium. Mission, vision, valeurs et engagement envers l'excellence.";
+$pageKeywords = "à propos, histoire, frachdark, meubles qualité, mobilier premium, mission, vision, valeurs, service client";
+$pageImage = $siteUrl . '/images/logo.jpg';
+
 require_once 'includes/header.php';
 ?>
 
-<section class="hero" style="padding: 4rem 2rem; position: relative;">
-    <a href="index.php" style="position: absolute; top: 2rem; left: 2rem; display: inline-flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; padding: 0.75rem 1.25rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border-radius: 8px; transition: all 0.3s ease; font-size: 0.95rem; font-weight: 500; z-index: 10; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateX(-3px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateX(0)';">
-        ← Retour à l'accueil
-    </a>
-    <div class="hero-content">
-        <h1>À Propos de Meubles de Maison</h1>
-        <p>Votre partenaire de confiance pour transformer votre intérieur</p>
-    </div>
-</section>
+<!-- Structured Data pour Organisation -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "mainEntity": {
+        "@type": "Organization",
+        "name": "Frachdark - Meubles de Maison",
+        "description": "Boutique en ligne de meubles modernes et élégants",
+        "url": "<?php echo $siteUrl; ?>",
+        "logo": "<?php echo $siteUrl; ?>/images/logo.jpg"
+    }
+}
+</script>
+
 
 <div class="container">
+    <!-- Bouton de retour -->
+    <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
+        <a href="<?php echo isset($_SERVER['HTTP_REFERER']) ? htmlspecialchars($_SERVER['HTTP_REFERER']) : 'index.php'; ?>" 
+           class="btn" 
+           style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; text-decoration: none;">
+            ← Retour
+        </a>
+    </div>
+
     <!-- Section Notre Histoire -->
     <section style="max-width: 900px; margin: 0 auto 4rem;">
         <div style="text-align: center; margin-bottom: 3rem;">
@@ -116,7 +137,7 @@ require_once 'includes/header.php';
     <!-- Section Statistiques -->
     <section style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); 
                      color: white; padding: 3rem 2rem; border-radius: 15px; margin-bottom: 4rem;">
-        <h2 style="text-align: center; margin-bottom: 3rem; font-size: 2rem;">Nos Chiffres</h2>
+        <h2 class="section-title" style="text-align: center; margin-bottom: 3rem; font-size: 2rem; color: white;">Nos Chiffres</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; text-align: center;">
             <div>
                 <div style="font-size: 3rem; font-weight: bold; margin-bottom: 0.5rem;">500+</div>

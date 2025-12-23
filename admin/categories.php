@@ -12,14 +12,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'add':
                 $name = trim($_POST['name'] ?? '');
                 $description = trim($_POST['description'] ?? '');
-                $icon = trim($_POST['icon'] ?? '');
+                $image = trim($_POST['image'] ?? ''); // Pour compatibilité avec saisie manuelle
+                
+                // Gestion de l'upload d'image
+                if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = '../images/categories/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    
+                    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    $fileType = $_FILES['image_file']['type'];
+                    
+                    if (in_array($fileType, $allowedTypes)) {
+                        $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($_FILES['image_file']['name']));
+                        $targetFile = $uploadDir . $fileName;
+                        
+                        if (move_uploaded_file($_FILES['image_file']['tmp_name'], $targetFile)) {
+                            $image = 'images/categories/' . $fileName;
+                        } else {
+                            $error = 'Erreur lors de l\'upload de l\'image.';
+                        }
+                    } else {
+                        $error = 'Type de fichier non autorisé. Formats acceptés : JPG, PNG, GIF, WEBP';
+                    }
+                }
                 
                 if (empty($name)) {
                     $error = 'Le nom de la catégorie est obligatoire.';
                 } else {
                     try {
-                        $stmt = $pdo->prepare("INSERT INTO categories (name, description, icon) VALUES (?, ?, ?)");
-                        $stmt->execute([$name, $description, $icon]);
+                        $stmt = $pdo->prepare("INSERT INTO categories (name, description, image) VALUES (?, ?, ?)");
+                        $stmt->execute([$name, $description, $image]);
                         $success = true;
                         $_POST = [];
                     } catch (PDOException $e) {
@@ -36,14 +60,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id = $_POST['id'] ?? 0;
                 $name = trim($_POST['name'] ?? '');
                 $description = trim($_POST['description'] ?? '');
-                $icon = trim($_POST['icon'] ?? '');
+                $image = $editCategory['image'] ?? ''; // Conserver l'image existante par défaut
+                
+                // Gestion de l'upload d'image si une nouvelle est fournie
+                if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = '../images/categories/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    
+                    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    $fileType = $_FILES['image_file']['type'];
+                    
+                    if (in_array($fileType, $allowedTypes)) {
+                        $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($_FILES['image_file']['name']));
+                        $targetFile = $uploadDir . $fileName;
+                        
+                        if (move_uploaded_file($_FILES['image_file']['tmp_name'], $targetFile)) {
+                            // Supprimer l'ancienne image si elle existe
+                            if (!empty($image) && file_exists('../' . $image)) {
+                                unlink('../' . $image);
+                            }
+                            $image = 'images/categories/' . $fileName;
+                        } else {
+                            $error = 'Erreur lors de l\'upload de l\'image.';
+                        }
+                    } else {
+                        $error = 'Type de fichier non autorisé. Formats acceptés : JPG, PNG, GIF, WEBP';
+                    }
+                } elseif (!empty($_POST['image'])) {
+                    // Permettre aussi la saisie manuelle du chemin
+                    $image = trim($_POST['image']);
+                }
                 
                 if (empty($name)) {
                     $error = 'Le nom de la catégorie est obligatoire.';
                 } else {
                     try {
-                        $stmt = $pdo->prepare("UPDATE categories SET name = ?, description = ?, icon = ? WHERE id = ?");
-                        $stmt->execute([$name, $description, $icon, $id]);
+                        $stmt = $pdo->prepare("UPDATE categories SET name = ?, description = ?, image = ? WHERE id = ?");
+                        $stmt->execute([$name, $description, $image, $id]);
                         $success = true;
                     } catch (PDOException $e) {
                         if ($e->getCode() == 23000) {
@@ -125,7 +180,7 @@ if (isset($_GET['edit'])) {
             <h2 style="margin-bottom: 1rem; color: var(--primary-color);">
                 <?php echo $editCategory ? 'Modifier la catégorie' : 'Ajouter une nouvelle catégorie'; ?>
             </h2>
-            <form method="POST" action="categories.php">
+            <form method="POST" action="categories.php" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="<?php echo $editCategory ? 'edit' : 'add'; ?>">
                 <?php if ($editCategory): ?>
                     <input type="hidden" name="id" value="<?php echo $editCategory['id']; ?>">
@@ -143,10 +198,24 @@ if (isset($_GET['edit'])) {
                 </div>
                 
                 <div class="form-group">
-                    <label for="icon">Icône (emoji)</label>
-                    <input type="text" id="icon" name="icon" placeholder="Ex: 🛋️" maxlength="10"
-                           value="<?php echo $editCategory ? htmlspecialchars($editCategory['icon'] ?? '') : (isset($_POST['icon']) ? htmlspecialchars($_POST['icon']) : ''); ?>">
-                    <small style="color: var(--text-light);">Optionnel : un emoji pour représenter la catégorie</small>
+                    <label for="image_file">Image de la catégorie</label>
+                    <?php if ($editCategory && !empty($editCategory['image'])): ?>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-light);">Image actuelle :</label>
+                            <img src="../<?php echo htmlspecialchars($editCategory['image']); ?>" 
+                                 alt="Image actuelle" 
+                                 style="max-width: 200px; height: auto; border-radius: 8px; border: 2px solid var(--border-light);"
+                                 onerror="this.style.display='none';">
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" id="image_file" name="image_file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+                           style="padding: 0.5rem; border: 2px dashed var(--border-light); border-radius: 8px; width: 100%; cursor: pointer; background: var(--bg-light);">
+                    <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">
+                        Formats acceptés : JPG, PNG, GIF, WEBP (max 5MB). 
+                        <?php if ($editCategory): ?>
+                            Laisser vide pour conserver l'image actuelle.
+                        <?php endif; ?>
+                    </small>
                 </div>
                 
                 <div style="display: flex; gap: 1rem;">
@@ -166,7 +235,7 @@ if (isset($_GET['edit'])) {
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Icône</th>
+                    <th>Image</th>
                     <th>Nom</th>
                     <th>Description</th>
                     <th>Produits</th>
@@ -184,7 +253,16 @@ if (isset($_GET['edit'])) {
                     <?php foreach ($categories as $category): ?>
                     <tr>
                         <td><?php echo $category['id']; ?></td>
-                        <td style="font-size: 1.5rem;"><?php echo htmlspecialchars($category['icon'] ?? ''); ?></td>
+                        <td>
+                            <?php if (!empty($category['image'])): ?>
+                                <img src="../<?php echo htmlspecialchars($category['image']); ?>" 
+                                     alt="<?php echo htmlspecialchars($category['name']); ?>" 
+                                     style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;"
+                                     onerror="this.src='../images/placeholder.jpg';">
+                            <?php else: ?>
+                                <span style="color: var(--text-light);">Aucune image</span>
+                            <?php endif; ?>
+                        </td>
                         <td><strong><?php echo htmlspecialchars($category['name']); ?></strong></td>
                         <td><?php echo htmlspecialchars($category['description'] ?? 'Aucune description'); ?></td>
                         <td><?php echo $category['product_count']; ?> produit(s)</td>

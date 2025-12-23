@@ -1,5 +1,4 @@
 <?php
-$pageTitle = "Détails Produit";
 require_once 'includes/header.php';
 
 if (!isset($_GET['id'])) {
@@ -38,6 +37,20 @@ if (!$product) {
     exit;
 }
 
+// Configuration SEO pour la page produit
+$siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+$productName = htmlspecialchars($product['name']);
+$productDescription = !empty($product['description']) ? htmlspecialchars(substr(strip_tags($product['description']), 0, 160)) : $productName . ' - Meuble de qualité disponible chez Frachdark';
+$productPrice = number_format($product['price'], 2, '.', '');
+$productImage = $siteUrl . '/' . htmlspecialchars($product['image']);
+$productCategory = htmlspecialchars($product['category']);
+$productUrl = $siteUrl . $_SERVER['REQUEST_URI'];
+
+$pageTitle = $productName;
+$pageMetaDescription = $productDescription . ' | Prix: ' . number_format($product['price'], 2, ',', ' ') . ' DH | Catégorie: ' . $productCategory;
+$pageKeywords = strtolower($productName) . ', ' . strtolower($productCategory) . ', meuble, mobilier, frachdark, achat meuble, prix meuble';
+$pageImage = $productImage;
+
 // Récupérer des produits similaires avec leurs relations
 try {
     $stmt = $pdo->prepare("
@@ -64,7 +77,85 @@ try {
 }
 ?>
 
+<!-- Structured Data (JSON-LD) pour SEO -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "<?php echo addslashes($productName); ?>",
+    "description": "<?php echo addslashes($productDescription); ?>",
+    "image": "<?php echo $productImage; ?>",
+    "brand": {
+        "@type": "Brand",
+        "name": "Frachdark"
+    },
+    "offers": {
+        "@type": "Offer",
+        "url": "<?php echo $productUrl; ?>",
+        "priceCurrency": "MAD",
+        "price": "<?php echo $productPrice; ?>",
+        "priceValidUntil": "<?php echo date('Y-m-d', strtotime('+1 year')); ?>",
+        "availability": "<?php echo ($product['stock'] > 0) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'; ?>",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": {
+            "@type": "Organization",
+            "name": "Frachdark"
+        }
+    },
+    "category": "<?php echo addslashes($productCategory); ?>",
+    "sku": "PROD-<?php echo $productId; ?>",
+    "mpn": "<?php echo $productId; ?>"
+}
+</script>
+
+<!-- Breadcrumb Structured Data -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Accueil",
+            "item": "<?php echo $siteUrl; ?>/index.php"
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Produits",
+            "item": "<?php echo $siteUrl; ?>/products.php"
+        },
+        {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "<?php echo addslashes($productCategory); ?>",
+            "item": "<?php echo $siteUrl; ?>/products.php?category=<?php echo urlencode($productCategory); ?>"
+        },
+        {
+            "@type": "ListItem",
+            "position": 4,
+            "name": "<?php echo addslashes($productName); ?>",
+            "item": "<?php echo $productUrl; ?>"
+        }
+    ]
+}
+</script>
+
 <div class="container">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="Fil d'Ariane" style="margin-bottom: 2rem; padding: 1rem 0;">
+        <ol style="display: flex; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <li><a href="index.php" style="color: var(--text-light); text-decoration: none;">Accueil</a></li>
+            <li style="color: var(--text-light);">/</li>
+            <li><a href="products.php" style="color: var(--text-light); text-decoration: none;">Produits</a></li>
+            <li style="color: var(--text-light);">/</li>
+            <li><a href="products.php?category=<?php echo urlencode($product['category']); ?>" style="color: var(--text-light); text-decoration: none;"><?php echo htmlspecialchars($product['category']); ?></a></li>
+            <li style="color: var(--text-light);">/</li>
+            <li style="color: var(--primary-color); font-weight: 600;"><?php echo htmlspecialchars($product['name']); ?></li>
+        </ol>
+    </nav>
+    
     <div style="margin-bottom: 2rem;">
         <a href="javascript:history.back()" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
             ← Retour
@@ -73,21 +164,33 @@ try {
     <div class="product-detail">
         <div class="product-gallery">
             <img src="<?php echo htmlspecialchars($product['image']); ?>" 
-                 alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                 alt="<?php echo htmlspecialchars($product['name'] . ' - ' . $productCategory . ' - Frachdark'); ?>" 
                  class="main-image"
+                 loading="lazy"
+                 width="600"
+                 height="500"
                  onerror="this.src='https://via.placeholder.com/600x500?text=Produit'">
             <div class="thumbnail-images">
                 <img src="<?php echo htmlspecialchars($product['image']); ?>" 
-                     alt="Vue 1" 
+                     alt="<?php echo htmlspecialchars($product['name'] . ' - Vue 1'); ?>" 
                      class="thumbnail active"
+                     loading="lazy"
+                     width="100"
+                     height="100"
                      onerror="this.src='https://via.placeholder.com/100x100?text=Produit'">
                 <img src="<?php echo htmlspecialchars($product['image']); ?>" 
-                     alt="Vue 2" 
+                     alt="<?php echo htmlspecialchars($product['name'] . ' - Vue 2'); ?>" 
                      class="thumbnail"
+                     loading="lazy"
+                     width="100"
+                     height="100"
                      onerror="this.src='https://via.placeholder.com/100x100?text=Produit'">
                 <img src="<?php echo htmlspecialchars($product['image']); ?>" 
-                     alt="Vue 3" 
+                     alt="<?php echo htmlspecialchars($product['name'] . ' - Vue 3'); ?>" 
                      class="thumbnail"
+                     loading="lazy"
+                     width="100"
+                     height="100"
                      onerror="this.src='https://via.placeholder.com/100x100?text=Produit'">
             </div>
         </div>
@@ -138,8 +241,11 @@ try {
                      data-category="<?php echo htmlspecialchars($related['category']); ?>" 
                      data-price="<?php echo $related['price']; ?>">
                     <img src="<?php echo htmlspecialchars($related['image']); ?>" 
-                         alt="<?php echo htmlspecialchars($related['name']); ?>" 
+                         alt="<?php echo htmlspecialchars($related['name'] . ' - ' . $related['category'] . ' - Frachdark'); ?>" 
                          class="product-image"
+                         loading="lazy"
+                         width="300"
+                         height="250"
                          onerror="this.src='https://via.placeholder.com/300x250?text=Produit'">
                     <div class="product-info">
                         <h3 class="product-name"><?php echo htmlspecialchars($related['name']); ?></h3>

@@ -29,6 +29,32 @@
     margin-bottom: 4rem;
 }
 
+/* Grille dynamique pour la page types.php */
+.types-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+.types-grid.cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.types-grid.cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.types-grid.cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.types-grid.cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.types-grid.cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .category-card {
     background: linear-gradient(135deg, var(--bg-white), var(--bg-light));
     padding: 3rem 2rem;
@@ -202,11 +228,20 @@
     .categories {
         grid-template-columns: repeat(3, 1fr);
     }
+
+    .types-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 768px) {
     .categories {
         grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .types-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 1.5rem;
     }
     
@@ -226,6 +261,10 @@
 
 @media (max-width: 480px) {
     .categories {
+        grid-template-columns: 1fr;
+    }
+
+    .types-grid {
         grid-template-columns: 1fr;
     }
 }

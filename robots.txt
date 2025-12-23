@@ -1,0 +1,52 @@
+# robots.txt pour Frachdark - Meubles de Maison
+# Optimisé pour SEO
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /*.php$
+Allow: /index.php
+Allow: /products.php
+Allow: /product.php
+Allow: /categories.php
+Allow: /about.php
+Allow: /contact.php
+Allow: /cart.php
+Allow: /checkout.php
+Allow: /process_order.php
+
+# Sitemap (remplacer votre-domaine.com par votre domaine réel)
+# Sitemap: https://www.votre-domaine.com/sitemap.php
+# Sitemap: http://www.votre-domaine.com/sitemap.php
+
+# Crawl-delay (optionnel, pour éviter de surcharger le serveur)
+Crawl-delay: 1
+
+# Bloquer les fichiers inutiles
+Disallow: /*.sql$
+Disallow: /*.log$
+Disallow: /database.sql
+Disallow: /INSTALLATION.md
+Disallow: /README.md
+Disallow: /__dummy__.ipynb
+
+# Autoriser les images et CSS/JS pour un meilleur référencement
+Allow: /images/
+Allow: /css/
+Allow: /styles.css
+Allow: /script.js
+
+# User-agent spécifiques
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
