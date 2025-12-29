@@ -14,11 +14,11 @@ $typeId = isset($_GET['type_id']) && !empty($_GET['type_id']) && $_GET['type_id'
 try {
     if ($typeId) {
         // Filtrer par catégorie ET par type
-        $stmt = $pdo->prepare("SELECT id, name FROM types_categories WHERE category_id = ? AND types_id = ? ORDER BY name");
+        $stmt = $pdo->prepare("SELECT id, name, image FROM types_categories WHERE category_id = ? AND types_id = ? ORDER BY name");
         $stmt->execute([$categoryId, $typeId]);
     } else {
         // Filtrer seulement par catégorie
-        $stmt = $pdo->prepare("SELECT id, name FROM types_categories WHERE category_id = ? ORDER BY name");
+        $stmt = $pdo->prepare("SELECT id, name, image FROM types_categories WHERE category_id = ? ORDER BY name");
         $stmt->execute([$categoryId]);
     }
     $types = $stmt->fetchAll(PDO::FETCH_ASSOC);

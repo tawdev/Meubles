@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $price = $_POST['price'] ?? '';
     $categoryId = intval($_POST['category_id'] ?? 0);
     $typeCategoryId = !empty($_POST['type_category_id']) ? intval($_POST['type_category_id']) : null;
+    $typeItemId = !empty($_POST['type_item_id']) ? intval($_POST['type_item_id']) : null;
     $typeId = !empty($_POST['type_id']) ? intval($_POST['type_id']) : null;
     $category = trim($_POST['category'] ?? ''); // Garder pour compatibilité
     $stock = $_POST['stock'] ?? 0;
@@ -53,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $category = $catData ? $catData['name'] : $category;
             }
             
-            $stmt = $pdo->prepare("INSERT INTO products (name, description, price, image, category, category_id, type_category_id, stock, max_length, max_width) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$name, $description, $price, $image ?: 'images/placeholder.jpg', $category, $categoryId, $typeCategoryId, $stock, $maxLength, $maxWidth]);
+            $stmt = $pdo->prepare("INSERT INTO products (name, description, price, image, category, category_id, type_category_id, types_categories_items_id, stock, max_length, max_width) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $description, $price, $image ?: 'images/placeholder.jpg', $category, $categoryId, $typeCategoryId, $typeItemId, $stock, $maxLength, $maxWidth]);
             $success = true;
             $_POST = []; // Réinitialiser le formulaire
         } catch (PDOException $e) {
@@ -225,8 +226,15 @@ try {
                 
                 <div class="form-group" id="type-category-group" style="display: none;">
                     <label for="type_category_id">Type de catégorie</label>
-                    <select id="type_category_id" name="type_category_id">
+                    <select id="type_category_id" name="type_category_id" onchange="loadItemsByType(this.value)">
                         <option value="">Sélectionner un type (optionnel)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="type-item-group" style="display: none;">
+                    <label for="type_item_id">Article spécifique</label>
+                    <select id="type_item_id" name="type_item_id">
+                        <option value="">Sélectionner un article (optionnel)</option>
                     </select>
                 </div>
                 
@@ -495,6 +503,51 @@ function loadTypesByCategory(categoryId) {
             typeSelect.disabled = false;
             typeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
             typeGroup.style.display = 'block';
+        });
+}
+
+// Charger les articles par type de catégorie
+function loadItemsByType(typeCategoryId) {
+    const itemSelect = document.getElementById('type_item_id');
+    const itemGroup = document.getElementById('type-item-group');
+    
+    if (!itemSelect || !itemGroup) {
+        return;
+    }
+    
+    itemSelect.innerHTML = '<option value="">Sélectionner un article (optionnel)</option>';
+    
+    if (!typeCategoryId || typeCategoryId === '') {
+        itemGroup.style.display = 'none';
+        return;
+    }
+    
+    itemGroup.style.display = 'block';
+    itemSelect.disabled = true;
+    itemSelect.innerHTML = '<option value="">Chargement...</option>';
+    
+    fetch(`get_items_by_type.php?type_category_id=${typeCategoryId}`)
+        .then(response => response.json())
+        .then(data => {
+            itemSelect.disabled = false;
+            itemSelect.innerHTML = '<option value="">Sélectionner un article (optionnel)</option>';
+            
+            if (data.success && data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.name;
+                    itemSelect.appendChild(option);
+                });
+                itemGroup.style.display = 'block';
+            } else {
+                itemGroup.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des articles:', error);
+            itemSelect.disabled = false;
+            itemSelect.innerHTML = '<option value="">Erreur de chargement</option>';
         });
 }
 

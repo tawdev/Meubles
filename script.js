@@ -6,8 +6,15 @@ class CartManager {
     }
 
     loadCart() {
-        const cart = localStorage.getItem('cart');
-        return cart ? JSON.parse(cart) : [];
+        try {
+            const cart = localStorage.getItem('cart');
+            const parsed = cart ? JSON.parse(cart) : [];
+            // S'assurer que les données chargées sont bien un tableau
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+            console.error('Erreur lors du chargement du panier:', error);
+            return [];
+        }
     }
 
     saveCart() {
@@ -121,10 +128,12 @@ class CartManager {
     }
 
     getTotal() {
+        if (!Array.isArray(this.cart)) return 0;
         return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
     }
 
     getItemCount() {
+        if (!Array.isArray(this.cart)) return 0;
         return this.cart.reduce((count, item) => count + item.quantity, 0);
     }
 
@@ -619,15 +628,81 @@ document.addEventListener('DOMContentLoaded', () => {
             const firstCard = track.querySelector('.home-category-card');
             if (!firstCard) return;
 
-            const gap = 24; // écart approximatif بين les cartes
+            const gap = 24; // écart approximatif entre les cartes
             const cardWidth = firstCard.getBoundingClientRect().width + gap;
+            let autoPlayInterval = null;
+            let isPaused = false;
 
+            // Fonction pour faire défiler vers la droite
+            function scrollNext() {
+                // Recalculer cardWidth dynamiquement pour gérer le resize
+                const currentCardWidth = firstCard.getBoundingClientRect().width + gap;
+                const maxScroll = track.scrollWidth - track.clientWidth;
+                const currentScroll = track.scrollLeft;
+                
+                if (currentScroll >= maxScroll - 10) {
+                    // Si on est à la fin, revenir au début (loop)
+                    track.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    track.scrollBy({ left: currentCardWidth, behavior: 'smooth' });
+                }
+            }
+
+            // Fonction pour démarrer l'auto-play
+            function startAutoPlay() {
+                if (autoPlayInterval) return; // Déjà démarré
+                autoPlayInterval = setInterval(() => {
+                    if (!isPaused) {
+                        scrollNext();
+                    }
+                }, 1000); // 1 seconde (1000ms)
+            }
+
+            // Fonction pour arrêter l'auto-play
+            function stopAutoPlay() {
+                if (autoPlayInterval) {
+                    clearInterval(autoPlayInterval);
+                    autoPlayInterval = null;
+                }
+            }
+
+            // Event listeners pour les boutons
             prevBtn.addEventListener('click', function() {
-                track.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+                const currentCardWidth = firstCard.getBoundingClientRect().width + gap;
+                track.scrollBy({ left: -currentCardWidth, behavior: 'smooth' });
+                // Réinitialiser l'auto-play après un clic manuel
+                stopAutoPlay();
+                setTimeout(startAutoPlay, 3000); // Redémarrer après 3 secondes
             });
 
             nextBtn.addEventListener('click', function() {
-                track.scrollBy({ left: cardWidth, behavior: 'smooth' });
+                scrollNext();
+                // Réinitialiser l'auto-play après un clic manuel
+                stopAutoPlay();
+                setTimeout(startAutoPlay, 3000); // Redémarrer après 3 secondes
+            });
+
+            // Pause on hover
+            slider.addEventListener('mouseenter', function() {
+                isPaused = true;
+            });
+
+            slider.addEventListener('mouseleave', function() {
+                isPaused = false;
+            });
+
+            // Démarrer l'auto-play au chargement
+            startAutoPlay();
+
+            // Réinitialiser l'auto-play si la fenêtre change de taille
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function() {
+                    stopAutoPlay();
+                    // Redémarrer l'auto-play après resize
+                    startAutoPlay();
+                }, 250);
             });
         });
     })();
@@ -658,4 +733,36 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// ===== BOUTON SCROLL TO TOP =====
+(function initScrollToTop() {
+    const scrollBtn = document.getElementById('scroll-to-top-home');
+    if (!scrollBtn) return;
+
+    // Fonction pour afficher/masquer le bouton selon la position du scroll
+    function toggleScrollButton() {
+        if (window.pageYOffset > 300) {
+            scrollBtn.classList.add('visible');
+        } else {
+            scrollBtn.classList.remove('visible');
+        }
+    }
+
+    // Fonction pour faire défiler vers le haut
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+
+    // Event listener pour le scroll
+    window.addEventListener('scroll', toggleScrollButton);
+
+    // Event listener pour le clic sur le bouton
+    scrollBtn.addEventListener('click', scrollToTop);
+
+    // Vérifier la position initiale au chargement
+    toggleScrollButton();
+})();
 

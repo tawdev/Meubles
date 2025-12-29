@@ -110,6 +110,9 @@ if ($currentCategoryId) {
 $success = false;
 $error = '';
 
+// Récupérer l'ID de l'article actuel du produit
+$currentTypeItemId = $product['types_categories_items_id'] ?? null;
+
 // Traiter le formulaire POST AVANT d'inclure header.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
@@ -117,28 +120,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = $_POST['price'] ?? '';
     $categoryId = intval($_POST['category_id'] ?? 0);
     $typeCategoryId = !empty($_POST['type_category_id']) ? intval($_POST['type_category_id']) : null;
+    $typeItemId = !empty($_POST['type_item_id']) ? intval($_POST['type_item_id']) : null;
     $typeId = !empty($_POST['type_id']) ? intval($_POST['type_id']) : null;
     $category = trim($_POST['category'] ?? ''); // Garder pour compatibilité
     $stock = $_POST['stock'] ?? 0;
     $maxLength = !empty($_POST['max_length']) ? floatval($_POST['max_length']) : null;
     $maxWidth = !empty($_POST['max_width']) ? floatval($_POST['max_width']) : null;
     $image = $product['image']; // Conserver l'image existante par défaut
-    
+
     // Gestion de l'upload d'image si une nouvelle est fournie
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = '../images/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
-        
+
         $fileName = time() . '_' . basename($_FILES['image']['name']);
         $targetFile = $uploadDir . $fileName;
-        
+
         if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
             $image = 'images/' . $fileName;
         }
     }
-    
+
     if (empty($name) || empty($price) || empty($categoryId)) {
         $error = 'Veuillez remplir tous les champs obligatoires.';
     } elseif (!is_numeric($price) || $price <= 0) {
@@ -152,9 +156,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $catData = $catStmt->fetch();
                 $category = $catData ? $catData['name'] : $category;
             }
-            
-            $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, price = ?, image = ?, category = ?, category_id = ?, type_category_id = ?, stock = ?, max_length = ?, max_width = ? WHERE id = ?");
-            $stmt->execute([$name, $description, $price, $image, $category, $categoryId, $typeCategoryId, $stock, $maxLength, $maxWidth, $productId]);
+
+            $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, price = ?, image = ?, category = ?, category_id = ?, type_category_id = ?, types_categories_items_id = ?, stock = ?, max_length = ?, max_width = ? WHERE id = ?");
+            $stmt->execute([$name, $description, $price, $image, $category, $categoryId, $typeCategoryId, $typeItemId, $stock, $maxLength, $maxWidth, $productId]);
             // Rediriger vers add.php après modification réussie (AVANT header.php)
             header('Location: add.php?success=1&id=' . $productId);
             exit;
@@ -173,7 +177,7 @@ require_once 'includes/header.php';
         <h1>Modifier le produit</h1>
         <a href="add.php" class="btn">← Retour</a>
     </div>
-    
+
     <?php if ($error): ?>
         <div style="background: #e74c3c; color: white; padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
             <?php echo htmlspecialchars($error); ?>
@@ -184,25 +188,29 @@ require_once 'includes/header.php';
         <form method="POST" action="edit.php?id=<?php echo $productId; ?>" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="name">Nom du produit *</label>
-                <input type="text" id="name" name="name" required value="<?php echo htmlspecialchars($product['name']); ?>">
+                <input type="text" id="name" name="name" required
+                    value="<?php echo htmlspecialchars($product['name']); ?>">
             </div>
-            
+
             <div class="form-group">
                 <label for="description">Description</label>
-                <textarea id="description" name="description" rows="5"><?php echo htmlspecialchars($product['description']); ?></textarea>
+                <textarea id="description" name="description"
+                    rows="5"><?php echo htmlspecialchars($product['description']); ?></textarea>
             </div>
-            
+
             <div class="form-group">
                 <label for="price" id="price-label">Prix (DH) *</label>
-                <input type="number" id="price" name="price" step="0.01" min="0" required value="<?php echo $product['price']; ?>">
-                <small id="price-hint" style="color: var(--text-light); display: none;">Prix par m² pour les produits sur mesure</small>
+                <input type="number" id="price" name="price" step="0.01" min="0" required
+                    value="<?php echo $product['price']; ?>">
+                <small id="price-hint" style="color: var(--text-light); display: none;">Prix par m² pour les produits
+                    sur mesure</small>
             </div>
-            
+
             <div class="form-group">
                 <label for="category_id">Catégorie *</label>
                 <select id="category_id" name="category_id" required>
                     <option value="">Sélectionner une catégorie</option>
-                    <?php 
+                    <?php
                     // Déterminer quelle catégorie est sélectionnée
                     $selectedCategoryId = $currentCategoryId;
                     if (!$selectedCategoryId && $currentCategoryName) {
@@ -214,297 +222,366 @@ require_once 'includes/header.php';
                             }
                         }
                     }
-                    
-                    foreach ($categoriesList as $cat): 
+
+                    foreach ($categoriesList as $cat):
                         $catId = isset($cat['id']) ? $cat['id'] : null;
-                        $isSelected = ($selectedCategoryId && $catId && intval($selectedCategoryId) == intval($catId)) || 
-                                      (!$selectedCategoryId && isset($cat['name']) && $cat['name'] === $currentCategoryName);
-                    ?>
-                        <option value="<?php echo $catId; ?>" 
-                                <?php echo $isSelected ? 'selected' : ''; ?>>
+                        $isSelected = ($selectedCategoryId && $catId && intval($selectedCategoryId) == intval($catId)) ||
+                            (!$selectedCategoryId && isset($cat['name']) && $cat['name'] === $currentCategoryName);
+                        ?>
+                        <option value="<?php echo $catId; ?>" <?php echo $isSelected ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($cat['name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <input type="hidden" id="category" name="category" value="<?php echo htmlspecialchars($currentCategoryName); ?>">
+                <input type="hidden" id="category" name="category"
+                    value="<?php echo htmlspecialchars($currentCategoryName); ?>">
             </div>
-            
+
             <div class="form-group">
                 <label for="type_id">Type (stock/mesure)</label>
                 <select id="type_id" name="type_id" onchange="onTypeChange()">
                     <option value="">Tous les types</option>
                     <?php foreach ($allTypes as $type): ?>
-                        <option value="<?php echo $type['id']; ?>" 
-                                <?php echo ($currentTypeId && $currentTypeId == $type['id']) ? 'selected' : ''; ?>>
+                        <option value="<?php echo $type['id']; ?>" <?php echo ($currentTypeId && $currentTypeId == $type['id']) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($type['name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <small style="color: var(--text-light);">Sélectionnez un type pour filtrer les types de catégories disponibles</small>
+                <small style="color: var(--text-light);">Sélectionnez un type pour filtrer les types de catégories
+                    disponibles</small>
             </div>
-            
-            <div class="form-group" id="type-category-group" style="<?php echo (!empty($typesList) || ($currentCategoryId && $currentCategoryId > 0)) ? '' : 'display: none;'; ?>">
+
+            <div class="form-group" id="type-category-group"
+                style="<?php echo (!empty($typesList) || ($currentCategoryId && $currentCategoryId > 0)) ? '' : 'display: none;'; ?>">
                 <label for="type_category_id">Type de catégorie</label>
-                <select id="type_category_id" name="type_category_id">
+                <select id="type_category_id" name="type_category_id" onchange="loadItemsByType(this.value)">
                     <option value="">Sélectionner un type (optionnel)</option>
-                    <?php 
+                    <?php
                     $currentTypeCategoryId = $product['type_category_id'] ?? null;
-                    foreach ($typesList as $type): 
-                    ?>
-                        <option value="<?php echo $type['id']; ?>" 
-                                <?php echo $currentTypeCategoryId == $type['id'] ? 'selected' : ''; ?>>
+                    foreach ($typesList as $type):
+                        ?>
+                        <option value="<?php echo $type['id']; ?>" <?php echo $currentTypeCategoryId == $type['id'] ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($type['name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <small style="color: var(--text-light);">Sélectionnez un type de catégorie pour mieux classer votre produit</small>
+                <small style="color: var(--text-light);">Sélectionnez un type de catégorie pour mieux classer votre
+                    produit</small>
             </div>
-            
+
+            <div class="form-group" id="type-item-group" style="display: none;">
+                <label for="type_item_id">Article spécifique</label>
+                <select id="type_item_id" name="type_item_id">
+                    <option value="">Sélectionner un article (optionnel)</option>
+                </select>
+                <small style="color: var(--text-light);">Sélectionnez un article pour un classement encore plus
+                    précis</small>
+            </div>
+
             <!-- Champs de dimensions pour produits sur mesure -->
             <div class="form-group" id="dimensions-group" style="display: none;">
-                <label style="color: var(--primary-color); font-weight: 600; margin-bottom: 0.5rem; display: block;">📏 Dimensions maximales (pour produits sur mesure)</label>
+                <label style="color: var(--primary-color); font-weight: 600; margin-bottom: 0.5rem; display: block;">📏
+                    Dimensions maximales (pour produits sur mesure)</label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div>
                         <label for="max_length">Longueur maximale (cm)</label>
-                        <input type="number" id="max_length" name="max_length" step="0.01" min="0" 
-                               value="<?php echo isset($product['max_length']) && $product['max_length'] ? htmlspecialchars($product['max_length']) : ''; ?>"
-                               placeholder="Ex: 200.00">
+                        <input type="number" id="max_length" name="max_length" step="0.01" min="0"
+                            value="<?php echo isset($product['max_length']) && $product['max_length'] ? htmlspecialchars($product['max_length']) : ''; ?>"
+                            placeholder="Ex: 200.00">
                     </div>
                     <div>
                         <label for="max_width">Largeur maximale (cm)</label>
-                        <input type="number" id="max_width" name="max_width" step="0.01" min="0" 
-                               value="<?php echo isset($product['max_width']) && $product['max_width'] ? htmlspecialchars($product['max_width']) : ''; ?>"
-                               placeholder="Ex: 150.00">
+                        <input type="number" id="max_width" name="max_width" step="0.01" min="0"
+                            value="<?php echo isset($product['max_width']) && $product['max_width'] ? htmlspecialchars($product['max_width']) : ''; ?>"
+                            placeholder="Ex: 150.00">
                     </div>
                 </div>
-                <small style="color: var(--text-light);">Ces dimensions s'affichent uniquement pour les produits sur mesure</small>
+                <small style="color: var(--text-light);">Ces dimensions s'affichent uniquement pour les produits sur
+                    mesure</small>
             </div>
-            
+
             <div class="form-group">
                 <label for="stock">Stock</label>
                 <input type="number" id="stock" name="stock" min="0" value="<?php echo $product['stock']; ?>">
             </div>
-            
+
             <div class="form-group">
                 <label>Image actuelle</label>
-                <img src="../<?php echo htmlspecialchars($product['image']); ?>" 
-                     alt="Image actuelle" 
-                     style="max-width: 200px; height: auto; border-radius: 5px; margin-bottom: 1rem;"
-                     onerror="this.src='https://via.placeholder.com/200x200?text=Produit'">
+                <img src="../<?php echo htmlspecialchars($product['image']); ?>" alt="Image actuelle"
+                    style="max-width: 200px; height: auto; border-radius: 5px; margin-bottom: 1rem;"
+                    onerror="this.src='https://via.placeholder.com/200x200?text=Produit'">
                 <label for="image">Nouvelle image (laisser vide pour conserver l'actuelle)</label>
                 <input type="file" id="image" name="image" accept="image/*">
                 <small style="color: var(--text-light);">Formats acceptés : JPG, PNG, GIF (max 5MB)</small>
             </div>
-            
+
             <button type="submit" class="btn">Enregistrer les modifications</button>
         </form>
     </div>
 </div>
 
 <script>
-// Charger les types de catégorie
-function loadTypesByCategory(categoryId, selectedTypeId = null) {
-    const typeSelect = document.getElementById('type_category_id');
-    const typeGroup = document.getElementById('type-category-group');
-    const categoryInput = document.getElementById('category');
-    const typeFilter = document.getElementById('type_id');
-    
-    if (!typeSelect || !typeGroup) {
-        console.error('Éléments du formulaire non trouvés');
-        return;
-    }
-    
-    // Réinitialiser le select des types
-    typeSelect.innerHTML = '<option value="">Sélectionner un type (optionnel)</option>';
-    
-    if (!categoryId || categoryId === '' || categoryId === '0') {
-        typeGroup.style.display = 'none';
-        if (categoryInput) {
-            categoryInput.value = '';
-        }
-        return;
-    }
-    
-    // Récupérer le nom de la catégorie
-    const categorySelect = document.getElementById('category_id');
-    if (categorySelect && categorySelect.selectedIndex >= 0) {
-        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-        if (selectedOption && categoryInput) {
-            categoryInput.value = selectedOption.textContent.replace(/[^\w\s]/g, '').trim();
-        }
-    }
-    
-    // Récupérer le type sélectionné (En stock / Sur mesure)
-    const selectedTypeIdFilter = typeFilter ? typeFilter.value : '';
-    
-    // Afficher le groupe pendant le chargement
-    typeGroup.style.display = 'block';
-    typeSelect.disabled = true;
-    typeSelect.innerHTML = '<option value="">Chargement...</option>';
-    
-    // Charger les types via AJAX avec le filtre de type si sélectionné
-    let apiUrl = `get_types_by_category.php?category_id=${categoryId}`;
-    if (selectedTypeIdFilter && selectedTypeIdFilter !== '' && selectedTypeIdFilter !== 'all') {
-        apiUrl += `&type_id=${selectedTypeIdFilter}`;
-    }
-    
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erreur réseau: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            typeSelect.disabled = false;
-            typeSelect.innerHTML = '<option value="">Sélectionner un type (optionnel)</option>';
-            
-            if (data.success && data.types && data.types.length > 0) {
-                data.types.forEach(type => {
-                    const option = document.createElement('option');
-                    option.value = type.id;
-                    option.textContent = type.name;
-                    if (selectedTypeId && parseInt(type.id) === parseInt(selectedTypeId)) {
-                        option.selected = true;
-                    }
-                    typeSelect.appendChild(option);
-                });
-                typeGroup.style.display = 'block';
-            } else {
-                // Afficher le groupe même s'il n'y a pas de types
-                const noTypeOption = document.createElement('option');
-                noTypeOption.value = '';
-                noTypeOption.textContent = 'Aucun type disponible';
-                noTypeOption.disabled = true;
-                typeSelect.appendChild(noTypeOption);
-                typeGroup.style.display = 'block';
-            }
-        })
-        .catch(error => {
-            console.error('Erreur lors du chargement des types:', error);
-            typeSelect.disabled = false;
-            typeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
-            typeGroup.style.display = 'block';
-        });
-}
-
-// Gérer le changement de type (En stock / Sur mesure)
-function onTypeChange() {
-    console.log('🔄 Changement de type détecté');
-    const categorySelect = document.getElementById('category_id');
-    const categoryId = categorySelect ? categorySelect.value : '';
-    const typeSelect = document.getElementById('type_id');
-    const dimensionsGroup = document.getElementById('dimensions-group');
-    
-    // Récupérer le type_category_id actuel pour le préserver
-    const typeCategorySelect = document.getElementById('type_category_id');
-    const currentTypeCategoryId = typeCategorySelect ? typeCategorySelect.value : null;
-    
-    // Vérifier si "Sur mesure" est sélectionné pour afficher les champs de dimensions
-    const priceLabel = document.getElementById('price-label');
-    const priceHint = document.getElementById('price-hint');
-    
-    if (typeSelect && dimensionsGroup) {
-        const selectedTypeText = typeSelect.options[typeSelect.selectedIndex] ? typeSelect.options[typeSelect.selectedIndex].textContent.trim() : '';
-        
-        // Afficher les dimensions si "Sur mesure" est sélectionné
-        if (selectedTypeText === 'Sur mesure' || selectedTypeText.toLowerCase().includes('sur mesure')) {
-            dimensionsGroup.style.display = 'block';
-            // Changer le label du prix
-            if (priceLabel) {
-                priceLabel.textContent = 'Prix (DH) / m² *';
-            }
-            if (priceHint) {
-                priceHint.style.display = 'block';
-            }
-            console.log('📏 Affichage des champs de dimensions pour produit sur mesure');
-        } else {
-            dimensionsGroup.style.display = 'none';
-            // Remettre le label du prix normal
-            if (priceLabel) {
-                priceLabel.textContent = 'Prix (DH) *';
-            }
-            if (priceHint) {
-                priceHint.style.display = 'none';
-            }
-            console.log('📏 Masquage des champs de dimensions');
-        }
-    }
-    
-    // Recharger les types de catégorie en fonction du type sélectionné
-    if (categoryId && categoryId !== '' && categoryId !== '0') {
-        console.log('📋 Rechargement des types de catégorie pour la catégorie:', categoryId);
-        loadTypesByCategory(categoryId, currentTypeCategoryId);
-    } else {
-        console.log('⚠️ Aucune catégorie sélectionnée, impossible de charger les types');
+    // Charger les types de catégorie
+    function loadTypesByCategory(categoryId, selectedTypeId = null) {
+        const typeSelect = document.getElementById('type_category_id');
         const typeGroup = document.getElementById('type-category-group');
-        if (typeGroup) {
-            typeGroup.style.display = 'none';
-        }
-    }
-}
+        const categoryInput = document.getElementById('category');
+        const typeFilter = document.getElementById('type_id');
 
-// Écouter les changements de catégorie et de type
-document.addEventListener('DOMContentLoaded', function() {
-    const categorySelect = document.getElementById('category_id');
-    const typeSelect = document.getElementById('type_id');
-    const typeCategorySelect = document.getElementById('type_category_id');
-    const currentTypeCategoryId = <?php echo isset($product['type_category_id']) && $product['type_category_id'] ? $product['type_category_id'] : 'null'; ?>;
-    const currentCategoryId = <?php echo $currentCategoryId ? $currentCategoryId : 'null'; ?>;
-    
-    if (categorySelect) {
-        // Vérifier que la catégorie est bien sélectionnée
-        if (categorySelect.value && categorySelect.value !== '' && categorySelect.value !== '0') {
-            // Attendre un peu pour s'assurer que le DOM est prêt
-            setTimeout(function() {
-                loadTypesByCategory(categorySelect.value, currentTypeCategoryId);
-            }, 200);
-        } else if (currentCategoryId) {
-            // Si la catégorie n'est pas sélectionnée mais qu'on a l'ID, la sélectionner
-            categorySelect.value = currentCategoryId;
-            setTimeout(function() {
-                loadTypesByCategory(currentCategoryId, currentTypeCategoryId);
-            }, 200);
+        if (!typeSelect || !typeGroup) {
+            console.error('Éléments du formulaire non trouvés');
+            return;
         }
-        
-        // Écouter les changements de catégorie
-        categorySelect.addEventListener('change', function() {
-            loadTypesByCategory(this.value, typeCategorySelect ? typeCategorySelect.value : null);
-        });
+
+        // Réinitialiser le select des types
+        typeSelect.innerHTML = '<option value="">Sélectionner un type (optionnel)</option>';
+
+        if (!categoryId || categoryId === '' || categoryId === '0') {
+            typeGroup.style.display = 'none';
+            if (categoryInput) {
+                categoryInput.value = '';
+            }
+            return;
+        }
+
+        // Récupérer le nom de la catégorie
+        const categorySelect = document.getElementById('category_id');
+        if (categorySelect && categorySelect.selectedIndex >= 0) {
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            if (selectedOption && categoryInput) {
+                categoryInput.value = selectedOption.textContent.replace(/[^\w\s]/g, '').trim();
+            }
+        }
+
+        // Récupérer le type sélectionné (En stock / Sur mesure)
+        const selectedTypeIdFilter = typeFilter ? typeFilter.value : '';
+
+        // Afficher le groupe pendant le chargement
+        typeGroup.style.display = 'block';
+        typeSelect.disabled = true;
+        typeSelect.innerHTML = '<option value="">Chargement...</option>';
+
+        // Charger les types via AJAX avec le filtre de type si sélectionné
+        let apiUrl = `get_types_by_category.php?category_id=${categoryId}`;
+        if (selectedTypeIdFilter && selectedTypeIdFilter !== '' && selectedTypeIdFilter !== 'all') {
+            apiUrl += `&type_id=${selectedTypeIdFilter}`;
+        }
+
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur réseau: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                typeSelect.disabled = false;
+                typeSelect.innerHTML = '<option value="">Sélectionner un type (optionnel)</option>';
+
+                if (data.success && data.types && data.types.length > 0) {
+                    data.types.forEach(type => {
+                        const option = document.createElement('option');
+                        option.value = type.id;
+                        option.textContent = type.name;
+                        if (selectedTypeId && parseInt(type.id) === parseInt(selectedTypeId)) {
+                            option.selected = true;
+                        }
+                        typeSelect.appendChild(option);
+                    });
+                    typeGroup.style.display = 'block';
+                } else {
+                    // Afficher le groupe même s'il n'y a pas de types
+                    const noTypeOption = document.createElement('option');
+                    noTypeOption.value = '';
+                    noTypeOption.textContent = 'Aucun type disponible';
+                    noTypeOption.disabled = true;
+                    typeSelect.appendChild(noTypeOption);
+                    typeGroup.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des types:', error);
+                typeSelect.disabled = false;
+                typeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                typeGroup.style.display = 'block';
+            });
     }
-    
-    // Écouter les changements de type
-    if (typeSelect) {
-        typeSelect.addEventListener('change', function() {
-            onTypeChange();
-        });
-        
-        // Vérifier au chargement si "Sur mesure" est déjà sélectionné
-        setTimeout(() => {
-            onTypeChange();
-            
-            // Vérifier aussi le type actuel du produit pour afficher le bon label
-            const currentTypeId = <?php echo $currentTypeId ? $currentTypeId : 'null'; ?>;
-            if (currentTypeId && typeSelect.value == currentTypeId) {
-                // Récupérer le nom du type pour vérifier s'il s'agit de "Sur mesure"
-                const selectedOption = typeSelect.options[typeSelect.selectedIndex];
-                if (selectedOption) {
-                    const typeName = selectedOption.textContent.trim();
-                    const priceLabel = document.getElementById('price-label');
-                    const priceHint = document.getElementById('price-hint');
-                    
-                    if ((typeName === 'Sur mesure' || typeName.toLowerCase().includes('sur mesure')) && priceLabel) {
-                        priceLabel.textContent = 'Prix (DH) / m² *';
-                        if (priceHint) {
-                            priceHint.style.display = 'block';
+
+    // Charger les articles par type de catégorie
+    function loadItemsByType(typeCategoryId, selectedItemId = null) {
+        const itemSelect = document.getElementById('type_item_id');
+        const itemGroup = document.getElementById('type-item-group');
+
+        if (!itemSelect || !itemGroup) {
+            return;
+        }
+
+        itemSelect.innerHTML = '<option value="">Sélectionner un article (optionnel)</option>';
+
+        if (!typeCategoryId || typeCategoryId === '') {
+            itemGroup.style.display = 'none';
+            return;
+        }
+
+        itemGroup.style.display = 'block';
+        itemSelect.disabled = true;
+        itemSelect.innerHTML = '<option value="">Chargement...</option>';
+
+        fetch(`get_items_by_type.php?type_category_id=${typeCategoryId}`)
+            .then(response => response.json())
+            .then(data => {
+                itemSelect.disabled = false;
+                itemSelect.innerHTML = '<option value="">Sélectionner un article (optionnel)</option>';
+
+                if (data.success && data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.textContent = item.name;
+                        if (selectedItemId && parseInt(item.id) === parseInt(selectedItemId)) {
+                            option.selected = true;
+                        }
+                        itemSelect.appendChild(option);
+                    });
+                    itemGroup.style.display = 'block';
+                } else {
+                    itemGroup.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des articles:', error);
+                itemSelect.disabled = false;
+                itemSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            });
+    }
+
+    // Gérer le changement de type (En stock / Sur mesure)
+    function onTypeChange() {
+        console.log('🔄 Changement de type détecté');
+        const categorySelect = document.getElementById('category_id');
+        const categoryId = categorySelect ? categorySelect.value : '';
+        const typeSelect = document.getElementById('type_id');
+        const dimensionsGroup = document.getElementById('dimensions-group');
+
+        // Récupérer le type_category_id actuel pour le préserver
+        const typeCategorySelect = document.getElementById('type_category_id');
+        const currentTypeCategoryId = typeCategorySelect ? typeCategorySelect.value : null;
+
+        // Vérifier si "Sur mesure" est sélectionné pour afficher les champs de dimensions
+        const priceLabel = document.getElementById('price-label');
+        const priceHint = document.getElementById('price-hint');
+
+        if (typeSelect && dimensionsGroup) {
+            const selectedTypeText = typeSelect.options[typeSelect.selectedIndex] ? typeSelect.options[typeSelect.selectedIndex].textContent.trim() : '';
+
+            // Afficher les dimensions si "Sur mesure" est sélectionné
+            if (selectedTypeText === 'Sur mesure' || selectedTypeText.toLowerCase().includes('sur mesure')) {
+                dimensionsGroup.style.display = 'block';
+                // Changer le label du prix
+                if (priceLabel) {
+                    priceLabel.textContent = 'Prix (DH) / m² *';
+                }
+                if (priceHint) {
+                    priceHint.style.display = 'block';
+                }
+                console.log('📏 Affichage des champs de dimensions pour produit sur mesure');
+            } else {
+                dimensionsGroup.style.display = 'none';
+                // Remettre le label du prix normal
+                if (priceLabel) {
+                    priceLabel.textContent = 'Prix (DH) *';
+                }
+                if (priceHint) {
+                    priceHint.style.display = 'none';
+                }
+                console.log('📏 Masquage des champs de dimensions');
+            }
+        }
+
+        // Recharger les types de catégorie en fonction du type sélectionné
+        if (categoryId && categoryId !== '' && categoryId !== '0') {
+            console.log('📋 Rechargement des types de catégorie pour la catégorie:', categoryId);
+            loadTypesByCategory(categoryId, currentTypeCategoryId);
+        } else {
+            console.log('⚠️ Aucune catégorie sélectionnée, impossible de charger les types');
+            const typeGroup = document.getElementById('type-category-group');
+            if (typeGroup) {
+                typeGroup.style.display = 'none';
+            }
+        }
+    }
+
+    // Écouter les changements de catégorie et de type
+    document.addEventListener('DOMContentLoaded', function () {
+        const categorySelect = document.getElementById('category_id');
+        const typeSelect = document.getElementById('type_id');
+        const typeCategorySelect = document.getElementById('type_category_id');
+        const currentTypeCategoryId = <?php echo isset($product['type_category_id']) && $product['type_category_id'] ? $product['type_category_id'] : 'null'; ?>;
+        const currentCategoryId = <?php echo $currentCategoryId ? $currentCategoryId : 'null'; ?>;
+
+        if (categorySelect) {
+            // Vérifier que la catégorie est bien sélectionnée
+            if (categorySelect.value && categorySelect.value !== '' && categorySelect.value !== '0') {
+                // Attendre un peu pour s'assurer que le DOM est prêt
+                setTimeout(function () {
+                    loadTypesByCategory(categorySelect.value, currentTypeCategoryId);
+                }, 200);
+            } else if (currentCategoryId) {
+                // Si la catégorie n'est pas sélectionnée mais qu'on a l'ID, la sélectionner
+                categorySelect.value = currentCategoryId;
+                setTimeout(function () {
+                    loadTypesByCategory(currentCategoryId, currentTypeCategoryId);
+                }, 200);
+            }
+
+            // Écouter les changements de catégorie
+            categorySelect.addEventListener('change', function () {
+                loadTypesByCategory(this.value, typeCategorySelect ? typeCategorySelect.value : null);
+                // Réinitialiser les articles lors d'un changement de catégorie
+                const itemGroup = document.getElementById('type-item-group');
+                if (itemGroup) itemGroup.style.display = 'none';
+            });
+        }
+
+        // Charger les articles initiaux si un type de catégorie est déjà sélectionné
+        const currentTypeItemId = <?php echo isset($product['types_categories_items_id']) && $product['types_categories_items_id'] ? $product['types_categories_items_id'] : 'null'; ?>;
+        if (typeCategorySelect && typeCategorySelect.value) {
+            setTimeout(function () {
+                loadItemsByType(typeCategorySelect.value, currentTypeItemId);
+            }, 400);
+        }
+
+        // Écouter les changements de type
+        if (typeSelect) {
+            typeSelect.addEventListener('change', function () {
+                onTypeChange();
+            });
+
+            // Vérifier au chargement si "Sur mesure" est déjà sélectionné
+            setTimeout(() => {
+                onTypeChange();
+
+                // Vérifier aussi le type actuel du produit pour afficher le bon label
+                const currentTypeId = <?php echo $currentTypeId ? $currentTypeId : 'null'; ?>;
+                if (currentTypeId && typeSelect.value == currentTypeId) {
+                    // Récupérer le nom du type pour vérifier s'il s'agit de "Sur mesure"
+                    const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+                    if (selectedOption) {
+                        const typeName = selectedOption.textContent.trim();
+                        const priceLabel = document.getElementById('price-label');
+                        const priceHint = document.getElementById('price-hint');
+
+                        if ((typeName === 'Sur mesure' || typeName.toLowerCase().includes('sur mesure')) && priceLabel) {
+                            priceLabel.textContent = 'Prix (DH) / m² *';
+                            if (priceHint) {
+                                priceHint.style.display = 'block';
+                            }
                         }
                     }
                 }
-            }
-        }, 300);
-    }
-});
+            }, 300);
+        }
+    });
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
-

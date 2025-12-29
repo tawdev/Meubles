@@ -43,7 +43,23 @@ try {
         $params[] = (int)$filterCategory;
     }
 
-    $sql .= " ORDER BY c.name, tc.name";
+    // Ordre personnalisé pour la catégorie Salon (category_id = 1)
+    if (!empty($filterCategory) && (int)$filterCategory === 1) {
+        $sql .= " ORDER BY 
+            CASE tc.name
+                WHEN 'turc salon' THEN 1
+                WHEN 'Canapé' THEN 2
+                WHEN 'Canapé d\'angle' THEN 3
+                WHEN 'canape fonction lit' THEN 4
+                WHEN 'Fauteuil' THEN 5
+                WHEN 'Meuble TV' THEN 6
+                WHEN 'Table basse' THEN 7
+                WHEN 'Bibliothèque' THEN 8
+                ELSE 9
+            END, tc.name";
+    } else {
+        $sql .= " ORDER BY c.name, tc.name";
+    }
 
     if (!empty($params)) {
         $stmt = $pdo->prepare($sql);
@@ -84,6 +100,15 @@ if ($typesCount === 1) {
 ?>
 
 <div class="container">
+    
+    <!-- Bouton de retour vers les catégories -->
+    <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
+        <a href="categories.php"
+           class="btn"
+           style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; text-decoration: none;">
+            ← Retour aux catégories
+        </a>
+    </div>
     
     <!-- Filtres catégories -->
     <section style="padding: 2rem 0 1rem 0;">

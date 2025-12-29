@@ -1,0 +1,26 @@
+# Requirements for Advanced Visual Search Service
+# Install: pip install -r requirements_visual_search.txt
+
+# Core dependencies
+flask>=2.3.0
+flask-cors>=4.0.0
+# Note: numpy 2.4.0 works with Python 3.14 (no need to downgrade)
+numpy>=1.24.0
+opencv-python>=4.8.0
+mysql-connector-python>=8.1.0
+Pillow>=10.0.0
+
+# Deep Learning
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Object Detection
+ultralytics>=8.0.0
+
+# Vector Search
+faiss-cpu>=1.7.4
+
+# Optional: For GPU support (if you have CUDA)
+# faiss-gpu>=1.7.4
+# torch (with CUDA support)
+

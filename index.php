@@ -1,9 +1,10 @@
 <?php
 // Configuration SEO pour la page d'accueil
 $siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+$currentUrl = $siteUrl . $_SERVER['REQUEST_URI'];
 $pageTitle = "Accueil";
-$pageMetaDescription = "Frachdark - Découvrez notre collection exclusive de meubles modernes et élégants pour transformer votre intérieur. Salon, chambre, salle à manger, bureau et décoration. Qualité premium, livraison rapide, paiement sécurisé.";
-$pageKeywords = "meubles, meubles de maison, mobilier, salon, chambre, salle à manger, bureau, décoration, frachdark, meubles modernes, meubles élégants, mobilier intérieur, ameublement";
+$pageMetaDescription = "Frachdark - Meubles Modernes au Maroc | Découvrez notre collection exclusive de meubles modernes et élégants pour transformer votre intérieur. Salon, chambre, salle à manger, bureau et décoration. Qualité premium, livraison rapide partout au Maroc, paiement sécurisé.";
+$pageKeywords = "meubles maroc, meubles de maison maroc, mobilier maroc, meubles salon maroc, meubles chambre maroc, meubles salle à manger maroc, meubles bureau maroc, décoration intérieure maroc, frachdark, meubles modernes maroc, meubles élégants maroc, mobilier intérieur maroc, achat meubles maroc, livraison meubles maroc";
 $pageImage = $siteUrl . '/images/logo.jpg';
 
 require_once 'includes/header.php';
@@ -52,17 +53,43 @@ try {
     "@context": "https://schema.org",
     "@type": "FurnitureStore",
     "name": "Frachdark - Meubles de Maison",
-    "description": "Boutique en ligne de meubles modernes et élégants pour votre intérieur",
+    "description": "Boutique en ligne de meubles modernes et élégants au Maroc. Large sélection de meubles pour salon, chambre, salle à manger, bureau et décoration. Qualité premium, livraison rapide partout au Maroc.",
     "url": "<?php echo $siteUrl; ?>",
     "logo": "<?php echo $siteUrl; ?>/images/logo.jpg",
     "image": "<?php echo $siteUrl; ?>/images/logo.jpg",
     "address": {
         "@type": "PostalAddress",
-        "addressCountry": "MA"
+        "addressCountry": "MA",
+        "addressRegion": "Maroc"
     },
     "priceRange": "$$",
-    "paymentAccepted": "Cash, Credit Card",
-    "currenciesAccepted": "MAD"
+    "paymentAccepted": "Cash, Credit Card, Carte bancaire",
+    "currenciesAccepted": "MAD",
+    "areaServed": {
+        "@type": "Country",
+        "name": "Morocco"
+    },
+    "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Catalogue de Meubles",
+        "itemListElement": [
+            {
+                "@type": "OfferCatalog",
+                "name": "Meubles Salon",
+                "url": "<?php echo $siteUrl; ?>/products.php?category=Salon"
+            },
+            {
+                "@type": "OfferCatalog",
+                "name": "Meubles Chambre",
+                "url": "<?php echo $siteUrl; ?>/products.php?category=Chambre"
+            },
+            {
+                "@type": "OfferCatalog",
+                "name": "Meubles Salle à Manger",
+                "url": "<?php echo $siteUrl; ?>/products.php?category=Salle à manger"
+            }
+        ]
+    }
 }
 </script>
 
@@ -72,20 +99,42 @@ try {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Frachdark - Meubles de Maison",
+    "alternateName": "Frachdark Maroc",
     "url": "<?php echo $siteUrl; ?>",
+    "description": "Boutique en ligne de meubles modernes et élégants au Maroc",
+    "inLanguage": "fr-MA",
     "potentialAction": {
         "@type": "SearchAction",
-        "target": "<?php echo $siteUrl; ?>/products.php?search={search_term_string}",
+        "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "<?php echo $siteUrl; ?>/products.php?search={search_term_string}"
+        },
         "query-input": "required name=search_term_string"
     }
+}
+</script>
+
+<!-- Structured Data pour BreadcrumbList -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Accueil",
+            "item": "<?php echo $siteUrl; ?>/index.php"
+        }
+    ]
+}
 </script>
 
 <section class="hero">
     <div class="hero-content">
-        <h1 class="animated-title">
+        <h1 class="animated-title" style="visibility: visible; opacity: 1;">
             <span class="title-word">frach</span>
             <span class="title-word">dark</span>
-            
         </h1>
         <p class="animated-subtitle">Découvrez notre collection exclusive de meubles modernes et élégants pour transformer votre intérieur</p>
         <a href="products.php" class="btn animated-btn">Découvrir nos produits</a>
@@ -94,9 +143,9 @@ try {
 
 <div class="container">
     <!-- Section Catégories -->
-    <section id="categories" style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding: 4rem 0;">
+    <section id="categories" style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding: 4rem 0;" aria-label="Catégories de meubles">
         <div class="categories-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h2 class="section-title" style="margin-bottom: 0; margin-left: 1rem;">Nos Catégories</h2>
+            <h2 class="section-title" style="margin-bottom: 0; margin-left: 1rem;">Nos Catégories de Meubles</h2>
             <a href="categories.php" class="btn view-all-categories-btn view-all-desktop" style="padding: 0.75rem 1.5rem;">Voir toutes les catégories →</a>
         </div>
 
@@ -111,7 +160,10 @@ try {
                         <div class="home-category-image-wrapper">
                             <?php if (!empty($category['image'])): ?>
                                 <img src="<?php echo htmlspecialchars($category['image']); ?>" 
-                                     alt="<?php echo htmlspecialchars($category['name']); ?>">
+                                     alt="<?php echo htmlspecialchars('Meubles ' . $category['name'] . ' - Frachdark Maroc'); ?>"
+                                     loading="lazy"
+                                     width="300"
+                                     height="200">
                             <?php else: ?>
                                 <div class="home-category-placeholder">📦</div>
                             <?php endif; ?>
@@ -195,7 +247,10 @@ try {
                         <div class="home-category-image-wrapper">
                             <?php if (!empty($product['image'])): ?>
                                 <img src="<?php echo htmlspecialchars($product['image']); ?>"
-                                     alt="<?php echo htmlspecialchars($product['name']); ?>">
+                                     alt="<?php echo htmlspecialchars($product['name'] . ' - ' . $product['category'] . ' - Frachdark Maroc'); ?>"
+                                     loading="lazy"
+                                     width="300"
+                                     height="200">
                             <?php else: ?>
                                 <div class="home-category-placeholder">📦</div>
                             <?php endif; ?>

@@ -46,9 +46,9 @@ $productImage = $siteUrl . '/' . htmlspecialchars($product['image']);
 $productCategory = htmlspecialchars($product['category']);
 $productUrl = $siteUrl . $_SERVER['REQUEST_URI'];
 
-$pageTitle = $productName;
-$pageMetaDescription = $productDescription . ' | Prix: ' . number_format($product['price'], 2, ',', ' ') . ' DH | Catégorie: ' . $productCategory;
-$pageKeywords = strtolower($productName) . ', ' . strtolower($productCategory) . ', meuble, mobilier, frachdark, achat meuble, prix meuble';
+$pageTitle = $productName . ' - Frachdark Maroc';
+$pageMetaDescription = $productDescription . ' | Prix: ' . number_format($product['price'], 2, ',', ' ') . ' DH | Catégorie: ' . $productCategory . ' | Livraison rapide partout au Maroc | Frachdark';
+$pageKeywords = strtolower($productName) . ', ' . strtolower($productCategory) . ' maroc, meuble maroc, mobilier maroc, frachdark, achat meuble maroc, prix meuble maroc, livraison meubles maroc';
 $pageImage = $productImage;
 
 // Récupérer des produits similaires avec leurs relations
@@ -164,7 +164,7 @@ try {
     <div class="product-detail">
         <div class="product-gallery">
             <img src="<?php echo htmlspecialchars($product['image']); ?>" 
-                 alt="<?php echo htmlspecialchars($product['name'] . ' - ' . $productCategory . ' - Frachdark'); ?>" 
+                 alt="<?php echo htmlspecialchars($product['name'] . ' - Meubles ' . $productCategory . ' - Frachdark Maroc'); ?>" 
                  class="main-image"
                  loading="lazy"
                  width="600"
@@ -241,7 +241,7 @@ try {
                      data-category="<?php echo htmlspecialchars($related['category']); ?>" 
                      data-price="<?php echo $related['price']; ?>">
                     <img src="<?php echo htmlspecialchars($related['image']); ?>" 
-                         alt="<?php echo htmlspecialchars($related['name'] . ' - ' . $related['category'] . ' - Frachdark'); ?>" 
+                         alt="<?php echo htmlspecialchars($related['name'] . ' - Meubles ' . $related['category'] . ' - Frachdark Maroc'); ?>" 
                          class="product-image"
                          loading="lazy"
                          width="300"

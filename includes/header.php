@@ -125,18 +125,31 @@ if (strpos($canonicalUrl, '?') !== false) {
             </button>
             <nav class="main-nav">
                 <ul>
+                <form action="products.php" method="GET" class="header-search-form">
+                <input type="text" 
+                       name="search" 
+                       id="header-search-input"
+                       placeholder="Rechercher un produit..." 
+                       value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>"
+                       class="header-search-input">
+                    <button type="submit" class="header-search-button" aria-label="Rechercher">
+                    🔍
+                    </button>
+            </form>
                     <li><a href="index.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">Accueil</a></li>
                     <li><a href="products.php" class="<?php echo (basename($_SERVER['PHP_SELF']) == 'products.php' || basename($_SERVER['PHP_SELF']) == 'product.php') ? 'active' : ''; ?>">Produits</a></li>
                     <li><a href="categories.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'categories.php' ? 'active' : ''; ?>">Catégories</a></li>
+                    <!-- <li><a href="visual_search.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'visual_search.php' ? 'active' : ''; ?>" title="Recherche Visuelle">🔍 Recherche Visuelle</a></li> -->
                     <li><a href="index.php#gallery" class="<?php echo basename($_SERVER['PHP_SELF']) == 'index.php#gallery' ? 'active' : ''; ?>">Galerie</a></li>   
                     <li><a href="about.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'about.php' ? 'active' : ''; ?>">À propos</a></li>
                     <li><a href="contact.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'contact.php' ? 'active' : ''; ?>">Contact</a></li>
                 </ul>
             </nav>
+            <!-- Barre de recherche -->
             <a href="cart.php" class="cart-icon">
                 🛒
                 <span class="cart-count" id="cart-count" style="display: none;">0</span>
-            </a>
+            </a>    
         </div>
     </header>
 

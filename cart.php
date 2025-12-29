@@ -1,7 +1,41 @@
 <?php
-$pageTitle = "Panier";
+// Configuration SEO pour la page Panier
+$siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+$currentUrl = $siteUrl . $_SERVER['REQUEST_URI'];
+$pageTitle = "Mon Panier - Frachdark";
+$pageMetaDescription = "Votre panier d'achat Frachdark. Gérez vos articles et finalisez votre commande de meubles en toute sécurité. Livraison rapide partout au Maroc. Paiement sécurisé.";
+$pageKeywords = "panier frachdark, commande meubles maroc, checkout meubles, achat meubles maroc, panier d'achat";
+$pageImage = $siteUrl . '/images/logo.jpg';
+
 require_once 'includes/header.php';
 ?>
+
+<!-- Structured Data pour CheckoutPage -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "CheckoutPage",
+    "name": "Panier d'achat - Frachdark",
+    "url": "<?php echo htmlspecialchars($currentUrl); ?>",
+    "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Accueil",
+                "item": "<?php echo $siteUrl; ?>/index.php"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Panier",
+                "item": "<?php echo htmlspecialchars($currentUrl); ?>"
+            }
+        ]
+    }
+}
+</script>
 
 <div class="container">
     <div class="cart-container" style="max-width: 1200px; margin: 0 auto; padding: 2rem 1rem;">
@@ -12,7 +46,7 @@ require_once 'includes/header.php';
         </div>
         <div style="text-align: center; margin-bottom: 3rem;">
             <h1 class="section-title" style="margin-bottom: 0.5rem; color: var(--primary-color); font-size: 2.5rem; font-weight: 700;">
-                🛒 Mon Panier
+                Mon Panier
             </h1>
             <p style="color: var(--text-light); font-size: 1.1rem;">Gérez vos articles et passez votre commande</p>
         </div>

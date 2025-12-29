@@ -1,9 +1,10 @@
 <?php
 // Configuration SEO pour la page Catégories
 $siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
-$pageTitle = "Nos Catégories";
-$pageMetaDescription = "Explorez nos catégories de meubles : Salon, Chambre, Salle à manger, Bureau et Décoration. Trouvez l'inspiration pour aménager votre intérieur avec des meubles de qualité.";
-$pageKeywords = "catégories meubles, meubles salon, meubles chambre, meubles salle à manger, meubles bureau, décoration intérieure, frachdark";
+$currentUrl = $siteUrl . $_SERVER['REQUEST_URI'];
+$pageTitle = "Nos Catégories de Meubles";
+$pageMetaDescription = "Explorez nos catégories de meubles au Maroc : Salon, Chambre, Salle à manger, Bureau et Décoration. Trouvez l'inspiration pour aménager votre intérieur avec des meubles de qualité premium. Frachdark - Livraison rapide partout au Maroc.";
+$pageKeywords = "catégories meubles maroc, meubles salon maroc, meubles chambre maroc, meubles salle à manger maroc, meubles bureau maroc, décoration intérieure maroc, frachdark, mobilier maroc";
 $pageImage = $siteUrl . '/images/logo.jpg';
 
 require_once 'includes/header.php';
@@ -30,6 +31,54 @@ try {
 
 ?>
 
+<!-- Structured Data pour CollectionPage -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Catégories de Meubles - Frachdark",
+    "description": "Explorez nos catégories de meubles : Salon, Chambre, Salle à manger, Bureau et Décoration",
+    "url": "<?php echo htmlspecialchars($currentUrl); ?>",
+    "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Accueil",
+                "item": "<?php echo $siteUrl; ?>/index.php"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Catégories",
+                "item": "<?php echo htmlspecialchars($currentUrl); ?>"
+            }
+        ]
+    },
+    "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": <?php echo count($categoriesList); ?>,
+        "itemListElement": [
+            <?php 
+            $catIndex = 1;
+            foreach ($categoriesList as $category): 
+            ?>
+            {
+                "@type": "ListItem",
+                "position": <?php echo $catIndex++; ?>,
+                "item": {
+                    "@type": "CategoryCode",
+                    "name": "<?php echo htmlspecialchars($category['name']); ?>",
+                    "url": "<?php echo $siteUrl; ?>/products.php?category=<?php echo urlencode($category['name']); ?>"
+                }
+            }<?php if ($catIndex <= count($categoriesList)) echo ','; ?>
+            <?php endforeach; ?>
+        ]
+    }
+}
+</script>
+
 <div class="container">
     <!-- Bouton de retour -->
     <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
@@ -41,8 +90,8 @@ try {
     </div>
 
     <!-- Liste des catégories -->
-    <section id="categories-list">
-        <h2 class="section-title">Toutes Nos Catégories</h2>
+    <section id="categories-list" aria-label="Liste des catégories de meubles">
+        <h1 class="section-title">Toutes Nos Catégories de Meubles</h1>
         
         <div class="categories" style="margin-bottom: 4rem;">
             <?php foreach ($categoriesList as $category): ?>
@@ -52,7 +101,10 @@ try {
                     <div style="width: 100%; height: 200px; margin-bottom: 1rem; border-radius: 8px; overflow: hidden; background: var(--bg-light); display: flex; align-items: center; justify-content: center;">
                         <?php if (!empty($category['image'])): ?>
                             <img src="<?php echo htmlspecialchars($category['image']); ?>" 
-                                 alt="<?php echo htmlspecialchars($category['name']); ?>" 
+                                 alt="<?php echo htmlspecialchars('Meubles ' . $category['name'] . ' - Frachdark Maroc'); ?>"
+                                 loading="lazy"
+                                 width="300"
+                                 height="200" 
                                  style="width: 100%; height: 100%; object-fit: cover;">
                         <?php else: ?>
                             <div style="font-size: 4rem; color: var(--text-light);">📦</div>

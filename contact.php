@@ -1,9 +1,10 @@
 <?php
 // Configuration SEO pour la page Contact
 $siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
-$pageTitle = "Contact";
-$pageMetaDescription = "Contactez Frachdark pour toute question sur nos meubles. Notre équipe est à votre disposition pour vous conseiller et vous accompagner dans votre projet d'aménagement intérieur.";
-$pageKeywords = "contact, service client, support, questions meubles, assistance, frachdark, coordonnées";
+$currentUrl = $siteUrl . $_SERVER['REQUEST_URI'];
+$pageTitle = "Contactez Frachdark - Service Client";
+$pageMetaDescription = "Contactez Frachdark au Maroc pour toute question sur nos meubles. Notre équipe est à votre disposition 7j/7 pour vous conseiller et vous accompagner dans votre projet d'aménagement intérieur. Email, téléphone, formulaire de contact.";
+$pageKeywords = "contact frachdark maroc, service client maroc, support meubles maroc, questions meubles, assistance frachdark, coordonnées frachdark, formulaire contact maroc";
 $pageImage = $siteUrl . '/images/logo.jpg';
 
 require_once 'includes/header.php';
@@ -14,18 +15,41 @@ require_once 'includes/header.php';
 {
     "@context": "https://schema.org",
     "@type": "ContactPage",
+    "name": "Contact Frachdark",
+    "url": "<?php echo htmlspecialchars($currentUrl); ?>",
     "mainEntity": {
         "@type": "Organization",
         "name": "Frachdark - Meubles de Maison",
-        "email": "contact@meublesmaison.com",
-        "telephone": "+33123456789",
+        "alternateName": "Frachdark Maroc",
+        "email": "contact@frachdark.com",
+        "telephone": "+212-XXX-XXXXXX",
         "address": {
             "@type": "PostalAddress",
-            "streetAddress": "123 Rue du Commerce",
-            "addressLocality": "Paris",
-            "postalCode": "75001",
-            "addressCountry": "FR"
-        }
+            "addressCountry": "MA",
+            "addressRegion": "Maroc"
+        },
+        "areaServed": {
+            "@type": "Country",
+            "name": "Morocco"
+        },
+        "url": "<?php echo $siteUrl; ?>"
+    },
+    "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Accueil",
+                "item": "<?php echo $siteUrl; ?>/index.php"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Contact",
+                "item": "<?php echo htmlspecialchars($currentUrl); ?>"
+            }
+        ]
     }
 }
 </script>
@@ -90,7 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <!-- Informations de Contact -->
         <section style="margin-bottom: 4rem;">
-            <h2 class="section-title">Nos Coordonnées</h2>
+            <h1 class="section-title">Contactez Frachdark</h1>
+            <h2 class="section-subtitle" style="font-size: 1.5rem; color: var(--text-light); margin-top: 1rem; margin-bottom: 2rem;">Nos Coordonnées</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem;">
                 <div class="category-card" style="text-align: center; padding: 2rem;">
                     <div style="font-size: 3.5rem; margin-bottom: 1rem;">📧</div>
